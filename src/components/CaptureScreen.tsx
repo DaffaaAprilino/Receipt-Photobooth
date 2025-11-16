@@ -9,7 +9,8 @@ interface Props {
   photosTaken: number;
   totalFrames: number;
   isCountingDown: boolean;
-  isFlashing: boolean; // Prop baru untuk flash
+  isFlashing: boolean;
+  countdown: number | null; // <-- Prop baru untuk countdown
 }
 
 export default function CaptureScreen({
@@ -19,10 +20,10 @@ export default function CaptureScreen({
   photosTaken,
   totalFrames,
   isCountingDown,
-  isFlashing, // Terima prop flash
+  isFlashing,
+  countdown, // <-- Terima prop countdown
 }: Props) {
   return (
-    // Ganti style card
     <div className="bg-brand-surface rounded-2xl shadow-xl overflow-hidden">
       <div className="relative bg-black">
         <video
@@ -37,9 +38,24 @@ export default function CaptureScreen({
           LIVE
         </div>
         
-        {/* REVISI IMK: Efek Flash Overlay */}
         {isFlashing && (
           <div className="absolute inset-0 bg-white opacity-100 transition-opacity duration-100" />
+        )}
+
+        {/* REVISI: Tampilkan Angka Countdown di sini */}
+        {countdown !== null && countdown > 0 && (
+          // Overlay gelap agar angka terlihat jelas
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black bg-opacity-30">
+            {/* Angkanya dibuat besar, putih, dan 'animate-pulse' 
+              agar terlihat 'muter' (beranimasi) dan kena psikologinya
+            */}
+            <span 
+              key={countdown} // 'key' ini penting agar React me-reset animasi di tiap angka
+              className="text-white text-9xl font-extrabold drop-shadow-lg animate-pulse"
+            >
+              {countdown}
+            </span>
+          </div>
         )}
       </div>
 
@@ -48,7 +64,6 @@ export default function CaptureScreen({
           <p className="text-brand-text/70 mb-2">
             Foto {photosTaken + 1} dari {totalFrames}
           </p>
-          {/* Ganti style progress bar */}
           <div className="w-full bg-brand-secondary rounded-full h-2">
             <div
               className="bg-brand-primary h-2 rounded-full transition-all"
@@ -57,21 +72,18 @@ export default function CaptureScreen({
           </div>
         </div>
 
-        {isCountingDown && (
-          <div className="text-center mb-6">
-            <p className="text-2xl font-bold text-brand-primary animate-pulse">Bersiaplah...</p>
-          </div>
-        )}
+        {/* Kita sembunyikan tulisan "Bersiaplah..." karena sudah diganti angka */}
+        {/* {isCountingDown && ( ... )} */}
 
-        {/* Ganti style tombol */}
         <div className="flex gap-4">
           <button
             onClick={onCapture}
-            disabled={isCountingDown}
+            disabled={isCountingDown} // Tombol akan nonaktif selama 3 detik
             className="flex-1 bg-brand-primary text-white py-3 rounded-lg font-bold text-lg hover:bg-brand-primary-hover disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <Camera size={20} />
-            Ambil Foto
+            {/* Ubah teks tombol jika sedang countdown */}
+            {isCountingDown ? '...' : 'Ambil Foto'}
           </button>
           <button
             onClick={onReset}
