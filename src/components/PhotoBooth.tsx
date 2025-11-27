@@ -20,8 +20,6 @@ export default function PhotoBooth() {
   const [isFlashing, setIsFlashing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
-
-  // REVISI: State baru untuk memunculkan popup konfirmasi
   const [isReviewing, setIsReviewing] = useState(false);
 
   useEffect(() => {
@@ -46,18 +44,19 @@ export default function PhotoBooth() {
   const startCamera = async (count: FrameCount) => {
     setFrameCount(count);
     try {
+      // Minta resolusi Full HD biar sumber gambarnya tajam
       const streamData = await navigator.mediaDevices.getUserMedia({
         video: { 
             facingMode: 'user',
-            width: { ideal: 1280 }, 
-            height: { ideal: 720 }
+            width: { ideal: 1920 }, // Naikkan ke Full HD
+            height: { ideal: 1080 } 
         },
       });
       setStream(streamData);
       setIsCameraActive(true);
       setCurrentStep('capture');
       setPhotos([]);
-      setIsReviewing(false); // Reset state reviewing
+      setIsReviewing(false);
     } catch (error) {
       console.error('Error accessing camera:', error);
       alert('Tidak bisa mengakses kamera');
@@ -81,7 +80,8 @@ export default function PhotoBooth() {
     ctx.drawImage(videoRef.current, 0, 0);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     
-    const photoData = canvas.toDataURL('image/png');
+    // Simpan gambar dalam kualitas tinggi (High Quality)
+    const photoData = canvas.toDataURL('image/jpeg', 1.0); // Gunakan JPEG quality 1.0
 
     setTimeout(() => setIsFlashing(false), 100);
 
@@ -89,8 +89,6 @@ export default function PhotoBooth() {
     setPhotos(newPhotos);
     setIsCountingDown(false);
 
-    // REVISI: Jika foto sudah penuh, JANGAN pindah halaman dulu.
-    // Tapi nyalakan mode "Reviewing" (Konfirmasi)
     if (newPhotos.length === frameCount) {
       setIsReviewing(true);
     }
@@ -102,7 +100,6 @@ export default function PhotoBooth() {
     setCountdown(3);
   };
 
-  // REVISI: Fungsi ini dipanggil kalau user klik "Lanjut Cetak"
   const confirmFinish = () => {
     stopCamera();
     setCurrentStep('result');
@@ -121,7 +118,7 @@ export default function PhotoBooth() {
   const retakeSession = () => {
     setIsCountingDown(false);
     setCountdown(null);
-    setIsReviewing(false); // Matikan modal konfirmasi kalau mau ngulang
+    setIsReviewing(false);
     setPhotos((prevPhotos) => {
       if (prevPhotos.length === 0) return prevPhotos;
       return prevPhotos.slice(0, -1);
@@ -142,45 +139,63 @@ export default function PhotoBooth() {
     const ctx = receiptCanvas.getContext('2d');
     if (!ctx) return;
 
-    const receiptWidth = 320; 
-    const padding = 20;
-    const photoWidth = 280; 
-    const photoHeight = Math.round(photoWidth * 0.75); 
-    
-    const spacing = 10;
-    const totalHeight = padding + 60 + spacing + (photoHeight * frameCount) + (spacing * (frameCount - 1)) + 30 + padding;
+    // --- REVISI HD: SKALA RESOLUSI ---
+    const scale = 4; // Kita kalikan ukurannya 4x lipat biar HD (320 * 4 = 1280px)
 
+    const receiptWidth = 320 * scale; 
+    const padding = 20 * scale;
+    const photoWidth = 280 * scale; 
+    const photoHeight = Math.round(photoWidth * 0.75); // Rasio 4:3
+    const spacing = 10 * scale;
+    
+    // Perhitungan tinggi total
+    const totalHeight = padding + (60 * scale) + spacing + (photoHeight * frameCount) + (spacing * (frameCount - 1)) + (30 * scale) + padding;
+
+    // Set ukuran canvas yang BESAR
     receiptCanvas.width = receiptWidth;
     receiptCanvas.height = totalHeight;
 
+    // Aktifkan anti-aliasing biar font halus
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Background Putih
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, receiptWidth, totalHeight);
     
+    // Border
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(2, 2, receiptWidth - 4, totalHeight - 4);
+    ctx.lineWidth = 2 * scale; // Border juga dipertebal
+    ctx.strokeRect(2 * scale, 2 * scale, receiptWidth - (4 * scale), totalHeight - (4 * scale));
 
     let yOffset = padding;
 
+    // Header Fonts (Ukurannya dikali scale)
     ctx.fillStyle = '#000000';
-    ctx.font = 'bold 20px "Courier New", monospace';
+    ctx.font = `bold ${20 * scale}px "Courier New", monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText('RECEIPT', receiptWidth / 2, yOffset + 22);
-    yOffset += 35;
-    ctx.font = '11px "Courier New", monospace';
+    ctx.fillText('RECEIPT', receiptWidth / 2, yOffset + (22 * scale));
+    
+    yOffset += (35 * scale);
+    ctx.font = `${11 * scale}px "Courier New", monospace`;
     ctx.fillText(new Date().toLocaleDateString('id-ID'), receiptWidth / 2, yOffset);
-    yOffset += 5;
-    ctx.font = '10px "Courier New", monospace';
-    ctx.fillText(new Date().toLocaleTimeString('id-ID'), receiptWidth / 2, yOffset + 10);
-    yOffset += spacing + 10;
+    
+    yOffset += (5 * scale);
+    ctx.font = `${10 * scale}px "Courier New", monospace`;
+    ctx.fillText(new Date().toLocaleTimeString('id-ID'), receiptWidth / 2, yOffset + (10 * scale));
+    
+    yOffset += spacing + (10 * scale);
 
+    // Garis Pemisah
     ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1 * scale;
     ctx.setLineDash([]); 
     ctx.beginPath();
     ctx.moveTo(padding, yOffset);
     ctx.lineTo(receiptWidth - padding, yOffset);
     ctx.stroke();
-    yOffset += spacing + 5;
+    
+    yOffset += spacing + (5 * scale);
 
     const photoPromises = photos.map((photo, index) => {
       return new Promise<void>((resolve) => {
@@ -190,6 +205,10 @@ export default function PhotoBooth() {
         const tempCtx = tempCanvas.getContext('2d');
         
         if (tempCtx) {
+          // Setting kualitas tinggi untuk crop
+          tempCtx.imageSmoothingEnabled = true;
+          tempCtx.imageSmoothingQuality = 'high';
+
           const tempImg = new Image();
           tempImg.onload = () => {
             const targetRatio = photoWidth / photoHeight;
@@ -225,9 +244,10 @@ export default function PhotoBooth() {
     Promise.all(photoPromises).then(() => {
         yOffset += (photoHeight * frameCount) + (spacing * (frameCount - 1));
         yOffset += spacing;
-        yOffset += 12; 
+        yOffset += (12 * scale); 
 
-        ctx.font = 'bold 12px "Courier New", monospace';
+        // Footer Font
+        ctx.font = `bold ${12 * scale}px "Courier New", monospace`;
         ctx.textAlign = 'center';
         ctx.fillText('Thank You!', receiptWidth / 2, yOffset);
 
@@ -240,7 +260,8 @@ export default function PhotoBooth() {
                 setPrintProgress(100);
                 setTimeout(() => {
                     const link = document.createElement('a');
-                    link.href = receiptCanvas.toDataURL('image/png');
+                    // Gunakan kualitas tertinggi saat export
+                    link.href = receiptCanvas.toDataURL('image/png', 1.0);
                     link.download = `photobooth-${Date.now()}.png`;
                     link.click();
                     setTimeout(() => {
@@ -268,8 +289,8 @@ export default function PhotoBooth() {
           videoRef={videoRef}
           onCapture={capturePhoto}
           onRetake={retakeSession}
-          onConfirm={confirmFinish} // REVISI: Kirim fungsi konfirmasi ke UI
-          isReviewing={isReviewing} // REVISI: Kirim status reviewing
+          onConfirm={confirmFinish}
+          isReviewing={isReviewing}
           photos={photos} 
           totalFrames={frameCount}
           isCountingDown={isCountingDown}
