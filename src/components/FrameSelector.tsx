@@ -9,71 +9,84 @@ interface Props {
 
 export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Props) {
   const [selectedFrameCount, setSelectedFrameCount] = useState<FrameCount>(defaultFrameCount);
-  const [previewFrameCount, setPreviewFrameCount] = useState<FrameCount>(defaultFrameCount);
 
   return (
-    // Ganti style card utama
-    <div className="bg-brand-surface rounded-2xl shadow-xl p-8 max-w-lg mx-auto">
-      <h1 className="text-4xl font-extrabold text-center mb-2 text-brand-primary">Receipt Photobooth</h1>
-      <p className="text-center text-brand-text/70 mb-8">Pilih berapa frame foto yang ingin Anda ambil</p>
-
-      {/* Ganti style tombol pilihan frame */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {([1, 2, 3, 4] as const).map(num => (
-          <button
-            key={num}
-            onMouseEnter={() => setPreviewFrameCount(num)}
-            onClick={() => setSelectedFrameCount(num)}
-            className={`p-6 rounded-xl font-bold text-2xl transition-all ${
-                selectedFrameCount === num
-                ? 'bg-brand-primary text-white scale-105 shadow-md'
-                : 'bg-brand-secondary text-brand-primary/70 hover:bg-brand-secondary/80'
-            }`}
-          >
-            {num}
-          </button>
-        ))}
+    <div className="w-full max-w-lg mx-auto rounded-2xl border border-white/70 bg-white/90 p-8 text-center shadow-[0_25px_80px_rgba(47,75,138,0.15)]">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-black text-brand-text">Receipt Photobooth</h1>
+        <p className="text-base text-brand-text/70">
+          Pilih jumlah frame yang mau kamu foto hari ini.
+        </p>
       </div>
 
-      {/* Ganti style preview receipt */}
-      <div className="mt-12 mb-8">
-        <p className="text-center text-brand-text/70 mb-4 font-semibold">Preview Layout:</p>
-        <div className="mx-auto" style={{ maxWidth: '320px', fontFamily: '"Courier New", monospace' }}>
-          {/* Ganti border hitam jadi lebih soft */}
-          <div className="border-4 border-gray-200 bg-white p-5">
-            <p className="text-center font-bold mb-1" style={{ fontSize: '18px' }}>RECEIPT</p>
-            <p className="text-center text-xs mb-2">
-              {new Date().toLocaleDateString('id-ID')}
-            </p>
-            <p className="text-center text-xs mb-3">
-              {new Date().toLocaleTimeString('id-ID')}
-            </p>
-            <div className="border-t-2 border-b-2 border-gray-300 py-3 space-y-2">
-              {Array.from({ length: previewFrameCount }).map((_, idx) => (
-                <div key={idx} className="w-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
-                  <span className="text-gray-500 text-sm font-semibold">Photo {idx + 1}</span>
-                </div>
-              ))}
+      <div className="mt-10 grid gap-4 grid-cols-4 place-items-center">
+        {([1, 2, 3, 4] as const).map(num => {
+          const isActive = selectedFrameCount === num;
+          return (
+            <button
+              key={num}
+              onClick={() => setSelectedFrameCount(num)}
+              // REVISI: Ubah shadow jadi abu-abu (gray-400/50)
+              className={`h-24 w-full rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 ${
+                isActive
+                  ? 'border-brand-primary bg-brand-primary text-white shadow-[0_10px_20px_rgba(156,163,175,0.5)] scale-105'
+                  : 'border-brand-secondary bg-brand-secondary text-brand-primary/70 hover:border-brand-primary/50 hover:bg-brand-secondary/80'
+              }`}
+            >
+              <span className="text-3xl font-black">{num}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+                Frame
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-12 mb-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.5em] text-brand-text/60 mb-6">
+          Preview Receipt
+        </p>
+        <div className="flex justify-center">
+          <div className="relative w-full max-w-[280px] font-['Courier_New',monospace]">
+            <div className="relative rounded-xl border-[3px] border-[#D9DDE6] bg-gradient-to-b from-white to-[#F5F7FB] p-6 shadow-sm">
+              <div className="text-center text-[18px] font-black tracking-[0.3em]">RECEIPT</div>
+              <p className="mt-1 text-center text-[11px] text-brand-text/70">
+                {new Date().toLocaleDateString('id-ID')} · {new Date().toLocaleTimeString('id-ID')}
+              </p>
+              
+              <div className="mt-4 border-t border-b border-dashed border-[#D9DDE6] py-4 space-y-3">
+                {Array.from({ length: selectedFrameCount }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-center border border-[#D9DDE6] bg-[#EEF1F8] text-xs font-semibold text-brand-text/60"
+                    style={{ aspectRatio: '4 / 3' }}
+                  >
+                    Photo {idx + 1}
+                  </div>
+                ))}
+              </div>
+              
+              <p className="mt-4 text-center text-xs font-bold tracking-[0.4em] text-brand-text/70">
+                THANK YOU
+              </p>
             </div>
-            <p className="text-center text-xs font-bold mt-3">Thank You!</p>
           </div>
         </div>
       </div>
 
-      {/* Ganti style tombol Mulai */}
-      <div className="mt-8 text-center">
+      <div className="flex flex-col items-center gap-3 text-center">
         <button
           onClick={() => onFrameSelect(selectedFrameCount)}
-          // Ganti style tombol outline-mu
-          className="bg-brand-surface text-brand-primary font-bold text-xl py-3 px-12 rounded-full border-2 border-brand-primary hover:bg-brand-secondary transition-colors"
+          // REVISI: Ubah shadow jadi abu-abu (gray-400/50)
+          className="inline-flex items-center gap-3 rounded-full bg-brand-primary px-12 py-4 text-xl font-bold uppercase tracking-[0.2em] text-white shadow-[0_10px_30px_rgba(156,163,175,0.5)] transition-transform hover:scale-105 active:scale-95"
         >
           Mulai
         </button>
-      </div>
 
-      <p className="text-center text-sm text-brand-text/60 mt-4">
-        Pilih jumlah frame dan tekan tombol Mulai
-      </p>
+        <p className="text-sm text-brand-text/60">
+          Tekan tombol di atas untuk memulai foto.
+        </p>
+      </div>
     </div>
   );
 }

@@ -3,8 +3,8 @@ import PhotoBooth from './components/PhotoBooth';
 
 export default function App() {
   return (
-    // PASTIKAN KELASNYA INI:
-    <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4 font-sans text-brand-text">
+    // BG-GRAY-100 INI KUNCINYA
+    <div className="min-h-screen w-full bg-gray-100 flex items-center justify-center p-4 font-sans text-gray-900 overflow-x-hidden">
       <PhotoBooth />
     </div>
   );

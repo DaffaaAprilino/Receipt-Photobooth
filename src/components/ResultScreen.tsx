@@ -9,58 +9,64 @@ interface Props {
 }
 
 export default function ResultScreen({ photos, onDownload, onReset }: Props) {
-  return (
-    // Ganti style card
-    <div className="bg-brand-surface rounded-2xl shadow-xl p-8">
-      <h2 className="text-2xl font-bold text-center mb-6 text-brand-primary">RECEIPT</h2>
+  const displayDate = photos[0]?.timestamp ?? new Date();
 
-      {/* Receipt Preview */}
-      <div className="mx-auto mb-8" style={{ maxWidth: '320px', fontFamily: '"Courier New", monospace' }}>
-        {/* Ganti style border */}
-        <div className="border-4 border-gray-200 bg-white p-5">
-          <p className="text-center font-bold text-lg mb-1" style={{ fontSize: '18px' }}>RECEIPT</p>
-          <p className="text-center text-xs mb-2">
-            {photos.length > 0 ? photos[0].timestamp.toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID')}
-          </p>
-          <p className="text-center text-xs mb-3">
-            {photos.length > 0 ? photos[0].timestamp.toLocaleTimeString('id-ID') : new Date().toLocaleTimeString('id-ID')}
-          </p>
-          {/* Ganti style garis */}
-          <div className="border-t-2 border-b-2 border-gray-300 py-3 space-y-2">
-            {photos.map((photo, idx) => (
-              <div key={idx} className="w-full">
-                <img
-                  src={photo.data}
-                  alt={`Photo ${idx + 1}`}
-                  style={{
-                    filter: 'grayscale(100%) contrast(1.1)', // Ini tetap B&W
-                    width: '100%',
-                    aspectRatio: '4/3',
-                    objectFit: 'cover',
-                  }}
-                />
-              </div>
-            ))}
+  return (
+    <div className="mx-auto w-full rounded-2xl border border-brand-secondary bg-white/95 p-6 text-center shadow-[0_30px_90px_rgba(0,0,0,0.08)] sm:p-10">
+      <h2 className="text-3xl font-black text-brand-text">Receipt Siap</h2>
+      <p className="mt-2 text-brand-text/70">Simak hasilnya di preview lalu download kalau sudah pas.</p>
+
+      <div className="mt-8 flex justify-center">
+        <div className="w-full max-w-sm font-['Courier_New',monospace]">
+          <div className="rounded-xl border-[3px] border-[#D9DDE6] bg-gradient-to-b from-white to-[#F5F7FB] px-7 py-8 shadow-[0_25px_45px_rgba(0,0,0,0.08)]">
+            <div className="text-center text-[20px] font-black tracking-[0.4em]">RECEIPT</div>
+            <p className="mt-2 text-center text-[12px] text-brand-text/70">
+              {displayDate.toLocaleDateString('id-ID')} · {displayDate.toLocaleTimeString('id-ID')}
+            </p>
+
+            <div className="mt-5 border-y border-dashed border-[#D9DDE6] py-5 space-y-4">
+              {photos.map((photo, idx) => (
+                <div
+                  key={idx}
+                  className="border border-[#D9DDE6] bg-[#EEF1F8]"
+                  // REVISI: Aspek Rasio Landscape 4/3
+                  style={{ aspectRatio: '4 / 3' }}
+                >
+                  <img
+                    src={photo.data}
+                    alt={`Photo ${idx + 1}`}
+                    className="h-full w-full object-cover"
+                    style={{ filter: 'grayscale(100%) contrast(1.08)' }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-6 text-center text-xs font-bold tracking-[0.5em] text-brand-text/70">
+              THANK YOU
+            </p>
           </div>
-          <p className="text-center text-xs font-bold mt-3">Thank You!</p>
         </div>
       </div>
 
-      {/* Ganti style tombol */}
-      <div className="flex gap-4">
+      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
         <button
           onClick={onDownload}
-          className="flex-1 bg-brand-primary text-white py-3 rounded-lg font-bold hover:bg-brand-primary-hover flex items-center justify-center gap-2"
+          className="flex-1 rounded-full bg-brand-primary px-8 py-4 text-lg font-bold text-white shadow-[0_18px_40px_rgba(47,75,138,0.35)] transition-transform hover:scale-[1.02]"
         >
-          <Download size={20} />
-          Download Receipt
+          <span className="inline-flex items-center justify-center gap-2">
+            <Download size={20} />
+            Download Receipt
+          </span>
         </button>
         <button
           onClick={onReset}
-          className="flex-1 bg-brand-surface text-brand-primary py-3 rounded-lg font-bold border-2 border-brand-primary hover:bg-brand-secondary flex items-center justify-center gap-2"
+          className="flex-1 rounded-full border-2 border-brand-primary px-8 py-4 text-lg font-bold text-brand-primary transition-colors hover:bg-brand-secondary"
         >
-          <RotateCcw size={20} />
-          Ulangi
+          <span className="inline-flex items-center justify-center gap-2">
+            <RotateCcw size={20} />
+            Ulangi
+          </span>
         </button>
       </div>
     </div>

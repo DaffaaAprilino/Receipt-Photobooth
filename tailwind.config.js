@@ -10,12 +10,12 @@ export default {
         'sans': ['Nunito', 'sans-serif'],
       },
       colors: {
-        'brand-bg': '#FFF5E4',      // Soft Peach/Beige
-        'brand-surface': '#FFFFFF', // Tetap putih bersih
-        'brand-primary': '#FF9494', // Soft Pink/Coral
-        'brand-primary-hover': '#FF7A7A',
-        'brand-secondary': '#FFE3E1', // Lightest Pink
-        'brand-text': '#524A4A'    // Dark Brown (lebih lembut dari hitam)
+        'brand-bg': '#F3F6FB',
+        'brand-surface': '#FFFFFF',
+        'brand-primary': '#2F4B8A',
+        'brand-primary-hover': '#253B6A',
+        'brand-secondary': '#E2E7F1',
+        'brand-text': '#1F2533'
       }
     },
   },

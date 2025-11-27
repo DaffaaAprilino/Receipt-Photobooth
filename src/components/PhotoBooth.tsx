@@ -1,5 +1,5 @@
 // src/components/PhotoBooth.tsx
-import { useRef, useState, useEffect } from 'react'; // <-- Tambah useEffect
+import { useRef, useState, useEffect } from 'react';
 import { FrameCount, Photo, Step } from '../types';
 
 import FrameSelector from './FrameSelector';
@@ -10,7 +10,8 @@ import PrintingOverlay from './PrintingOverlay';
 export default function PhotoBooth() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [frameCount, setFrameCount] = useState<FrameCount>(4);
+  
+  const [frameCount, setFrameCount] = useState<FrameCount>(1);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [, setIsCameraActive] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>('select');
@@ -18,9 +19,10 @@ export default function PhotoBooth() {
   const [printProgress, setPrintProgress] = useState(0);
   const [isFlashing, setIsFlashing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-
-  // REVISI: Tambah state untuk hitungan mundur
   const [countdown, setCountdown] = useState<number | null>(null);
+
+  // REVISI: State baru untuk memunculkan popup konfirmasi
+  const [isReviewing, setIsReviewing] = useState(false);
 
   useEffect(() => {
     if (currentStep === 'capture' && stream && videoRef.current) {
@@ -28,44 +30,40 @@ export default function PhotoBooth() {
     }
   }, [currentStep, stream]);
 
-  // REVISI: Tambah useEffect untuk MENJALANKAN hitungan mundur
   useEffect(() => {
-    // Jika countdown tidak berjalan, jangan lakukan apa-apa
     if (countdown === null) return;
-
-    // Jika countdown sampai 0...
     if (countdown === 0) {
-      setCountdown(null); // Matikan angka
-      performCapture();   // Ambil fotonya!
+      setCountdown(null);
+      performCapture();
     } else {
-      // Jika masih di atas 0, kurangi 1 setiap detik
       const timer = setTimeout(() => {
         setCountdown(countdown - 1);
-      }, 1000); // 1 detik
-
-      // Bersihkan timer jika komponennya di-unmount
+      }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [countdown]); // Efek ini akan berjalan setiap kali nilai 'countdown' berubah
+  }, [countdown]);
 
   const startCamera = async (count: FrameCount) => {
     setFrameCount(count);
     try {
       const streamData = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
+        video: { 
+            facingMode: 'user',
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 }
+        },
       });
       setStream(streamData);
       setIsCameraActive(true);
       setCurrentStep('capture');
       setPhotos([]);
+      setIsReviewing(false); // Reset state reviewing
     } catch (error) {
       console.error('Error accessing camera:', error);
       alert('Tidak bisa mengakses kamera');
     }
   };
 
-  // REVISI: Ini fungsi baru untuk MENGAMBIL FOTO
-  // (Logika dari capturePhoto dipindah ke sini)
   const performCapture = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     
@@ -77,32 +75,38 @@ export default function PhotoBooth() {
 
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
+
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(videoRef.current, 0, 0);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    
     const photoData = canvas.toDataURL('image/png');
 
     setTimeout(() => setIsFlashing(false), 100);
 
     const newPhotos = [...photos, { data: photoData, timestamp: new Date() }];
     setPhotos(newPhotos);
-    setIsCountingDown(false); // Selesai countdown
+    setIsCountingDown(false);
 
+    // REVISI: Jika foto sudah penuh, JANGAN pindah halaman dulu.
+    // Tapi nyalakan mode "Reviewing" (Konfirmasi)
     if (newPhotos.length === frameCount) {
-      stopCamera();
-      setCurrentStep('result');
+      setIsReviewing(true);
     }
   }
 
-  // REVISI: capturePhoto sekarang HANYA MEMULAI hitungan
   const capturePhoto = async () => {
-    // Jangan lakukan apa-apa jika sedang countdown
     if (isCountingDown) return;
+    setIsCountingDown(true);
+    setCountdown(3);
+  };
 
-    setIsCountingDown(true); // Mulai countdown
-    setCountdown(3); // Set angka ke 3 (ini akan memicu useEffect)
-    // Loop 'for' 3 detik dihapus dari sini
+  // REVISI: Fungsi ini dipanggil kalau user klik "Lanjut Cetak"
+  const confirmFinish = () => {
+    stopCamera();
+    setCurrentStep('result');
+    setIsReviewing(false);
   };
 
   const stopCamera = () => {
@@ -114,27 +118,50 @@ export default function PhotoBooth() {
     setStream(null);
   };
 
+  const retakeSession = () => {
+    setIsCountingDown(false);
+    setCountdown(null);
+    setIsReviewing(false); // Matikan modal konfirmasi kalau mau ngulang
+    setPhotos((prevPhotos) => {
+      if (prevPhotos.length === 0) return prevPhotos;
+      return prevPhotos.slice(0, -1);
+    });
+  };
+
+  const resetToHome = () => {
+    stopCamera();
+    setPhotos([]);
+    setCurrentStep('select');
+  };
+
   const downloadReceipt = () => {
-    // ... (FUNGSI INI SAMA, TIDAK BERUBAH) ...
     setCurrentStep('printing');
     setPrintProgress(0);
+
     const receiptCanvas = document.createElement('canvas');
     const ctx = receiptCanvas.getContext('2d');
     if (!ctx) return;
-    const receiptWidth = 320;
-    const photoWidth = 280;
+
+    const receiptWidth = 320; 
     const padding = 20;
-    const photoHeight = Math.round((photoWidth * 3) / 4);
+    const photoWidth = 280; 
+    const photoHeight = Math.round(photoWidth * 0.75); 
+    
     const spacing = 10;
     const totalHeight = padding + 60 + spacing + (photoHeight * frameCount) + (spacing * (frameCount - 1)) + 30 + padding;
+
     receiptCanvas.width = receiptWidth;
     receiptCanvas.height = totalHeight;
+
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, receiptWidth, totalHeight);
+    
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
     ctx.strokeRect(2, 2, receiptWidth - 4, totalHeight - 4);
+
     let yOffset = padding;
+
     ctx.fillStyle = '#000000';
     ctx.font = 'bold 20px "Courier New", monospace';
     ctx.textAlign = 'center';
@@ -146,6 +173,7 @@ export default function PhotoBooth() {
     ctx.font = '10px "Courier New", monospace';
     ctx.fillText(new Date().toLocaleTimeString('id-ID'), receiptWidth / 2, yOffset + 10);
     yOffset += spacing + 10;
+
     ctx.strokeStyle = '#000000';
     ctx.setLineDash([]); 
     ctx.beginPath();
@@ -153,17 +181,37 @@ export default function PhotoBooth() {
     ctx.lineTo(receiptWidth - padding, yOffset);
     ctx.stroke();
     yOffset += spacing + 5;
+
     const photoPromises = photos.map((photo, index) => {
       return new Promise<void>((resolve) => {
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = photoWidth;
         tempCanvas.height = photoHeight;
         const tempCtx = tempCanvas.getContext('2d');
+        
         if (tempCtx) {
           const tempImg = new Image();
           tempImg.onload = () => {
+            const targetRatio = photoWidth / photoHeight;
+            const imgRatio = tempImg.width / tempImg.height;
+
+            let sx = 0, sy = 0, sWidth = tempImg.width, sHeight = tempImg.height;
+
+            if (imgRatio > targetRatio) {
+                sWidth = tempImg.height * targetRatio;
+                sx = (tempImg.width - sWidth) / 2;
+            } else {
+                sHeight = tempImg.width / targetRatio;
+                sy = (tempImg.height - sHeight) / 2;
+            }
+
             tempCtx.filter = 'grayscale(100%) contrast(1.1)'; 
-            tempCtx.drawImage(tempImg, 0, 0, photoWidth, photoHeight);
+            tempCtx.drawImage(
+                tempImg, 
+                sx, sy, sWidth, sHeight,
+                0, 0, photoWidth, photoHeight
+            );
+
             ctx.drawImage(tempCanvas, padding, yOffset + (index * (photoHeight + spacing)), photoWidth, photoHeight);
             resolve();
           };
@@ -173,13 +221,16 @@ export default function PhotoBooth() {
         }
       });
     });
+
     Promise.all(photoPromises).then(() => {
         yOffset += (photoHeight * frameCount) + (spacing * (frameCount - 1));
         yOffset += spacing;
         yOffset += 12; 
+
         ctx.font = 'bold 12px "Courier New", monospace';
         ctx.textAlign = 'center';
         ctx.fillText('Thank You!', receiptWidth / 2, yOffset);
+
         let progress = 0;
         const printInterval = setInterval(() => {
             progress += Math.random() * 25;
@@ -203,13 +254,6 @@ export default function PhotoBooth() {
     });
   };
 
-  const reset = () => {
-    stopCamera();
-    setPhotos([]);
-    setCurrentStep('select');
-  };
-
-  // --- RENDER LOGIC ---
   return (
     <div className="w-full max-w-2xl">
       {currentStep === 'select' && (
@@ -223,12 +267,14 @@ export default function PhotoBooth() {
         <CaptureScreen
           videoRef={videoRef}
           onCapture={capturePhoto}
-          onReset={reset}
-          photosTaken={photos.length}
+          onRetake={retakeSession}
+          onConfirm={confirmFinish} // REVISI: Kirim fungsi konfirmasi ke UI
+          isReviewing={isReviewing} // REVISI: Kirim status reviewing
+          photos={photos} 
           totalFrames={frameCount}
           isCountingDown={isCountingDown}
           isFlashing={isFlashing}
-          countdown={countdown} // <-- Kirim prop countdown
+          countdown={countdown}
         />
       )}
 
@@ -236,7 +282,7 @@ export default function PhotoBooth() {
         <ResultScreen
           photos={photos}
           onDownload={downloadReceipt}
-          onReset={reset}
+          onReset={resetToHome}
         />
       )}
 
