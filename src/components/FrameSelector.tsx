@@ -48,7 +48,7 @@ export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Prop
         </p>
         <div className="flex justify-center">
           <div className="relative w-full max-w-[280px] font-['Courier_New',monospace]">
-            <div className="relative rounded-xl border-[3px] border-[#D9DDE6] bg-gradient-to-b from-white to-[#F5F7FB] p-6 shadow-sm">
+            <div className="relative rounded-xl border-[3px] border-[#D9DDE6] bg-gradient-to-b from-white to-[#F5F7FB] p-6 shadow-sm receipt-jagged-edge">
               <div className="text-center text-[18px] font-black tracking-[0.3em]">RECEIPT</div>
               <p className="mt-1 text-center text-[11px] text-brand-text/70">
                 {new Date().toLocaleDateString('id-ID')} · {new Date().toLocaleTimeString('id-ID')}
@@ -66,7 +66,12 @@ export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Prop
                 ))}
               </div>
               
-              <p className="mt-4 text-center text-xs font-bold tracking-[0.4em] text-brand-text/70">
+              {/* Titik di bawah angka sebelum THANK YOU */}
+              <p className="mt-3 text-center text-[10px] tracking-[0.4em] text-brand-text/40">
+                • • • • • • • •
+              </p>
+
+              <p className="mt-2 text-center text-xs font-bold tracking-[0.4em] text-brand-text/70">
                 THANK YOU
               </p>
             </div>

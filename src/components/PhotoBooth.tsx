@@ -7,6 +7,63 @@ import CaptureScreen from './CaptureScreen';
 import ResultScreen from './ResultScreen';
 import PrintingOverlay from './PrintingOverlay';
 
+function applyDither(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const { data } = imageData;
+  const totalPixels = width * height;
+
+  // Build a luminance buffer we can diffuse error through
+  const lum = new Float32Array(totalPixels);
+
+  for (let i = 0; i < totalPixels; i++) {
+    const idx = i * 4;
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+    // Standard luma approximation
+    lum[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
+  // Floyd–Steinberg error diffusion, left-to-right, top-to-bottom
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      const oldVal = lum[i];
+      const newVal = oldVal < 128 ? 0 : 255;
+      const err = oldVal - newVal;
+
+      lum[i] = newVal;
+
+      // Distribute error to neighbors
+      if (x + 1 < width) {
+        lum[i + 1] += (err * 7) / 16;
+      }
+      if (y + 1 < height) {
+        if (x > 0) {
+          lum[i + width - 1] += (err * 3) / 16;
+        }
+        lum[i + width] += (err * 5) / 16;
+        if (x + 1 < width) {
+          lum[i + width + 1] += (err * 1) / 16;
+        }
+      }
+    }
+  }
+
+  // Write back as 1‑bit black/white
+  for (let i = 0; i < totalPixels; i++) {
+    const idx = i * 4;
+    const v = Math.max(0, Math.min(255, lum[i]));
+    const bw = v < 128 ? 0 : 255;
+    data[idx] = bw;
+    data[idx + 1] = bw;
+    data[idx + 2] = bw;
+    // keep alpha channel as-is
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+}
+
 export default function PhotoBooth() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,6 +78,8 @@ export default function PhotoBooth() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [receiptTitle, setReceiptTitle] = useState('RECEIPT');
 
   useEffect(() => {
     if (currentStep === 'capture' && stream && videoRef.current) {
@@ -41,13 +100,14 @@ export default function PhotoBooth() {
     }
   }, [countdown]);
 
-  const startCamera = async (count: FrameCount) => {
+  const startCamera = async (count: FrameCount, mode?: 'user' | 'environment') => {
+    const desiredFacingMode = mode ?? facingMode;
     setFrameCount(count);
     try {
       // Minta resolusi Full HD biar sumber gambarnya tajam
       const streamData = await navigator.mediaDevices.getUserMedia({
         video: { 
-            facingMode: 'user',
+            facingMode: desiredFacingMode,
             width: { ideal: 1920 }, // Naikkan ke Full HD
             height: { ideal: 1080 } 
         },
@@ -57,6 +117,7 @@ export default function PhotoBooth() {
       setCurrentStep('capture');
       setPhotos([]);
       setIsReviewing(false);
+      setFacingMode(desiredFacingMode);
     } catch (error) {
       console.error('Error accessing camera:', error);
       alert('Tidak bisa mengakses kamera');
@@ -131,9 +192,18 @@ export default function PhotoBooth() {
     setCurrentStep('select');
   };
 
+  const toggleCamera = async () => {
+    const newMode: 'user' | 'environment' = facingMode === 'user' ? 'environment' : 'user';
+    // Matikan kamera saat ini sebelum mengganti
+    stopCamera();
+    await startCamera(frameCount, newMode);
+  };
+
   const downloadReceipt = () => {
     setCurrentStep('printing');
     setPrintProgress(0);
+
+    const headerText = (receiptTitle || 'RECEIPT').slice(0, 15);
 
     const receiptCanvas = document.createElement('canvas');
     const ctx = receiptCanvas.getContext('2d');
@@ -159,37 +229,39 @@ export default function PhotoBooth() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Background Putih
+    // Background Putih (tanpa border luar)
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, receiptWidth, totalHeight);
-    
-    // Border
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2 * scale; // Border juga dipertebal
-    ctx.strokeRect(2 * scale, 2 * scale, receiptWidth - (4 * scale), totalHeight - (4 * scale));
 
     let yOffset = padding;
 
     // Header Fonts (Ukurannya dikali scale)
-    ctx.fillStyle = '#000000';
-    ctx.font = `bold ${20 * scale}px "Courier New", monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText('RECEIPT', receiptWidth / 2, yOffset + (22 * scale));
-    
-    yOffset += (35 * scale);
-    ctx.font = `${11 * scale}px "Courier New", monospace`;
-    ctx.fillText(new Date().toLocaleDateString('id-ID'), receiptWidth / 2, yOffset);
-    
-    yOffset += (5 * scale);
-    ctx.font = `${10 * scale}px "Courier New", monospace`;
-    ctx.fillText(new Date().toLocaleTimeString('id-ID'), receiptWidth / 2, yOffset + (10 * scale));
-    
-    yOffset += spacing + (10 * scale);
 
-    // Garis Pemisah
-    ctx.strokeStyle = '#000000';
+    // Header: hitam, bold, dengan sedikit jarak antar huruf (meniru tracking)
+    ctx.fillStyle = '#000000';
+    const spacedHeader = headerText.split('').join(' ');
+    ctx.font = `bold ${20 * scale}px "Courier New", monospace`;
+    ctx.fillText(spacedHeader, receiptWidth / 2, yOffset + (22 * scale));
+    
+    // Jarak ke tanggal/jam (mt-2 kira-kira 8px)
+    yOffset += (35 * scale);
+
+    // Tanggal + jam satu baris, warna abu (brand-text/70)
+    ctx.fillStyle = '#4B5563';
+    ctx.font = `${11 * scale}px "Courier New", monospace`;
+    const dateText = new Date().toLocaleDateString('id-ID');
+    const timeText = new Date().toLocaleTimeString('id-ID');
+    const dateTimeText = `${dateText} · ${timeText}`;
+    ctx.fillText(dateTimeText, receiptWidth / 2, yOffset + (10 * scale));
+    
+    // Jarak ke garis dashed (mt-5 ~ 20px)
+    yOffset += (spacing * 2);
+
+    // Garis Pemisah (dashed abu-abu seperti preview)
+    ctx.strokeStyle = '#D9DDE6';
     ctx.lineWidth = 1 * scale;
-    ctx.setLineDash([]); 
+    ctx.setLineDash([4 * scale, 4 * scale]); 
     ctx.beginPath();
     ctx.moveTo(padding, yOffset);
     ctx.lineTo(receiptWidth - padding, yOffset);
@@ -242,14 +314,37 @@ export default function PhotoBooth() {
     });
 
     Promise.all(photoPromises).then(() => {
+        // Turunkan yOffset ke bawah semua foto
         yOffset += (photoHeight * frameCount) + (spacing * (frameCount - 1));
-        yOffset += spacing;
-        yOffset += (12 * scale); 
 
-        // Footer Font
-        ctx.font = `bold ${12 * scale}px "Courier New", monospace`;
+        // Garis dashed di bawah foto (border bawah, sama seperti atas)
+        const bottomLineY = yOffset + spacing; // sedikit jarak dari foto
+        ctx.strokeStyle = '#D9DDE6';
+        ctx.lineWidth = 1 * scale;
+        ctx.setLineDash([4 * scale, 4 * scale]);
+        ctx.beginPath();
+        ctx.moveTo(padding, bottomLineY);
+        ctx.lineTo(receiptWidth - padding, bottomLineY);
+        ctx.stroke();
+
+        // Base untuk elemen setelah garis bawah
+        yOffset = bottomLineY;
+
+        // Baris titik dekoratif di bawah garis (sebelum THANK YOU)
+        ctx.fillStyle = '#9CA3AF';
+        ctx.font = `${10 * scale}px "Courier New", monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText('Thank You!', receiptWidth / 2, yOffset);
+        const dotsText = '•   •   •   •   •   •   •   •';
+        ctx.fillText(dotsText, receiptWidth / 2, yOffset + (14 * scale));
+
+        // Jarak sebelum THANK YOU (supaya tidak mepet)
+        yOffset += (14 * scale) + (12 * scale);
+
+        // Footer Font: non-bold abu-abu seperti preview
+        ctx.fillStyle = '#4B5563';
+        ctx.font = `${12 * scale}px "Courier New", monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText('THANK YOU', receiptWidth / 2, yOffset);
 
         let progress = 0;
         const printInterval = setInterval(() => {
@@ -296,6 +391,7 @@ export default function PhotoBooth() {
           isCountingDown={isCountingDown}
           isFlashing={isFlashing}
           countdown={countdown}
+          toggleCamera={toggleCamera}
         />
       )}
 
@@ -304,6 +400,8 @@ export default function PhotoBooth() {
           photos={photos}
           onDownload={downloadReceipt}
           onReset={resetToHome}
+          receiptTitle={receiptTitle}
+          setReceiptTitle={setReceiptTitle}
         />
       )}
 

@@ -1,6 +1,6 @@
 // src/components/CaptureScreen.tsx
 import { LegacyRef } from 'react';
-import { Camera, RotateCcw, Check, ArrowLeft } from 'lucide-react'; // Tambah icon
+import { Camera, RotateCcw, Check, ArrowLeft, SwitchCamera } from 'lucide-react'; // Tambah icon
 import { Photo } from '../types';
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
   isCountingDown: boolean;
   isFlashing: boolean;
   countdown: number | null;
+  toggleCamera: () => void;
 }
 
 export default function CaptureScreen({
@@ -27,6 +28,7 @@ export default function CaptureScreen({
   isCountingDown,
   isFlashing,
   countdown,
+  toggleCamera,
 }: Props) {
   return (
     <div className="mx-auto w-full rounded-2xl border border-brand-secondary bg-white shadow-[0_25px_60px_rgba(0,0,0,0.08)] overflow-hidden relative">
@@ -62,6 +64,13 @@ export default function CaptureScreen({
       )}
 
       <div className="relative bg-black aspect-[4/3]">
+        <button
+          type="button"
+          onClick={toggleCamera}
+          className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
+        >
+          <SwitchCamera size={18} />
+        </button>
         <video
           ref={videoRef}
           autoPlay
