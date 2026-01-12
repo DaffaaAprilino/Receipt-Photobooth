@@ -7,63 +7,6 @@ import CaptureScreen from './CaptureScreen';
 import ResultScreen from './ResultScreen';
 import PrintingOverlay from './PrintingOverlay';
 
-function applyDither(ctx: CanvasRenderingContext2D, width: number, height: number) {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const { data } = imageData;
-  const totalPixels = width * height;
-
-  // Build a luminance buffer we can diffuse error through
-  const lum = new Float32Array(totalPixels);
-
-  for (let i = 0; i < totalPixels; i++) {
-    const idx = i * 4;
-    const r = data[idx];
-    const g = data[idx + 1];
-    const b = data[idx + 2];
-    // Standard luma approximation
-    lum[i] = 0.299 * r + 0.587 * g + 0.114 * b;
-  }
-
-  // Floyd–Steinberg error diffusion, left-to-right, top-to-bottom
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = y * width + x;
-      const oldVal = lum[i];
-      const newVal = oldVal < 128 ? 0 : 255;
-      const err = oldVal - newVal;
-
-      lum[i] = newVal;
-
-      // Distribute error to neighbors
-      if (x + 1 < width) {
-        lum[i + 1] += (err * 7) / 16;
-      }
-      if (y + 1 < height) {
-        if (x > 0) {
-          lum[i + width - 1] += (err * 3) / 16;
-        }
-        lum[i + width] += (err * 5) / 16;
-        if (x + 1 < width) {
-          lum[i + width + 1] += (err * 1) / 16;
-        }
-      }
-    }
-  }
-
-  // Write back as 1‑bit black/white
-  for (let i = 0; i < totalPixels; i++) {
-    const idx = i * 4;
-    const v = Math.max(0, Math.min(255, lum[i]));
-    const bw = v < 128 ? 0 : 255;
-    data[idx] = bw;
-    data[idx + 1] = bw;
-    data[idx + 2] = bw;
-    // keep alpha channel as-is
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-}
-
 export default function PhotoBooth() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
