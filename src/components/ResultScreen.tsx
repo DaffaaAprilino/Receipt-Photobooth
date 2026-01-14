@@ -1,5 +1,6 @@
 // src/components/ResultScreen.tsx
 import { Download, RotateCcw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Photo } from '../types';
 
 interface Props {
@@ -8,15 +9,30 @@ interface Props {
   onReset: () => void;
   receiptTitle: string;
   setReceiptTitle: (value: string) => void;
+  footerText: string;
+  setFooterText: (value: string) => void;
 }
 
-export default function ResultScreen({ photos, onDownload, onReset, receiptTitle, setReceiptTitle }: Props) {
-  const displayDate = photos[0]?.timestamp ?? new Date();
+export default function ResultScreen({ photos, onDownload, onReset, receiptTitle, setReceiptTitle, footerText, setFooterText }: Props) {
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <div className="mx-auto w-full rounded-2xl border border-brand-secondary bg-white/95 p-6 text-center shadow-[0_30px_90px_rgba(0,0,0,0.08)] sm:p-10">
-      <h2 className="text-3xl font-black text-brand-text">Receipt Siap</h2>
-      <p className="mt-2 text-brand-text/70">Simak hasilnya di preview lalu download kalau sudah pas.</p>
+    <div className="mx-auto w-full rounded-3xl border border-white/60 bg-white/95 p-6 text-center shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:p-10 backdrop-blur-xl">
+      <div className="space-y-2">
+        <p className="inline-flex items-center rounded-full bg-brand-secondary/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-brand-primary/90">
+          Langkah 3 - Simpan hasil
+        </p>
+        <h2 className="text-3xl font-black text-brand-text">Receipt kamu siap!</h2>
+        <p className="text-sm sm:text-base text-brand-text/70">Cek dulu preview-nya di bawah, lalu download kalau sudah pas.</p>
+      </div>
 
       <div className="mt-8 flex justify-center">
         <div className="w-full max-w-sm font-['Courier_New',monospace]">
@@ -34,12 +50,9 @@ export default function ResultScreen({ photos, onDownload, onReset, receiptTitle
                 aria-label="Judul struk"
                 placeholder="RECEIPT (bisa diubah)"
               />
-              <p className="mt-1 text-[10px] text-brand-text/40">
-                Judul di atas bisa kamu ganti (maks. 15 karakter).
-              </p>
             </div>
             <p className="mt-2 text-center text-[12px] text-brand-text/70">
-              {displayDate.toLocaleDateString('id-ID')} · {displayDate.toLocaleTimeString('id-ID')}
+              {currentTime.toLocaleDateString('id-ID')} · {currentTime.toLocaleTimeString('id-ID')}
             </p>
 
             <div className="mt-5 border-y border-dashed border-[#D9DDE6] py-5 space-y-4">
@@ -60,19 +73,34 @@ export default function ResultScreen({ photos, onDownload, onReset, receiptTitle
               ))}
             </div>
 
-            {/* Titik di bawah frame sebelum THANK YOU */}
-            <p className="mt-3 text-center text-[10px] tracking-[0.4em] text-brand-text/40">
-              • • • • • • • •
-            </p>
-
-            <p className="mt-2 text-center text-xs font-bold tracking-[0.5em] text-brand-text/70">
-              THANK YOU
-            </p>
+            {footerText && (
+              <p className="mt-3 text-center text-xs font-bold tracking-[0.3em] text-brand-text/70">
+                {footerText.toUpperCase()}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+      <p className="mt-4 text-xs sm:text-sm text-brand-text/60">
+        Judul receipt bisa kamu ganti sendiri (maks. 15 karakter) di kolom di atas.
+      </p>
+
+      <div className="mt-3 flex flex-col gap-2 max-w-sm mx-auto text-left">
+        <label className="text-xs font-semibold text-brand-text/70">
+          Teks bawah (opsional)
+        </label>
+        <input
+          type="text"
+          value={footerText}
+          onChange={(e) => setFooterText(e.target.value.slice(0, 20))}
+          maxLength={20}
+          className="w-full rounded-full border border-brand-secondary bg-white px-4 py-2 text-sm text-brand-text focus:border-brand-primary focus:outline-none"
+          placeholder="Teks bawah (boleh dikosongkan)"
+        />
+      </div>
+
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:justify-center">
         <button
           onClick={onDownload}
           className="flex-1 rounded-full bg-brand-primary px-8 py-4 text-lg font-bold text-white shadow-[0_18px_40px_rgba(47,75,138,0.35)] transition-transform hover:scale-[1.02]"
@@ -88,7 +116,7 @@ export default function ResultScreen({ photos, onDownload, onReset, receiptTitle
         >
           <span className="inline-flex items-center justify-center gap-2">
             <RotateCcw size={20} />
-            Ulangi
+            Kembali ke awal
           </span>
         </button>
       </div>

@@ -1,6 +1,6 @@
 // src/components/CaptureScreen.tsx
 import { LegacyRef } from 'react';
-import { Camera, RotateCcw, Check, ArrowLeft, SwitchCamera } from 'lucide-react'; // Tambah icon
+import { Camera, RotateCcw, Check, ArrowLeft, SwitchCamera, Zap } from 'lucide-react'; // Tambah icon
 import { Photo } from '../types';
 
 interface Props {
@@ -15,6 +15,10 @@ interface Props {
   isFlashing: boolean;
   countdown: number | null;
   toggleCamera: () => void;
+  onBackHome: () => void;
+  isTorchOn: boolean;
+  onToggleTorch: () => void;
+  facingMode: 'user' | 'environment';
 }
 
 export default function CaptureScreen({
@@ -29,13 +33,17 @@ export default function CaptureScreen({
   isFlashing,
   countdown,
   toggleCamera,
+  onBackHome,
+  isTorchOn,
+  onToggleTorch,
+  facingMode,
 }: Props) {
   return (
-    <div className="mx-auto w-full rounded-2xl border border-brand-secondary bg-white shadow-[0_25px_60px_rgba(0,0,0,0.08)] overflow-hidden relative">
+    <div className="mx-auto w-full rounded-3xl border border-white/60 bg-white/95 shadow-[0_28px_90px_rgba(15,23,42,0.22)] overflow-hidden relative backdrop-blur-xl">
       
       {/* REVISI: MODAL KONFIRMASI (Overlay di atas semuanya jika isReviewing true) */}
       {isReviewing && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm p-6 text-center animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm p-6 text-center animate-in fade-in duration-300">
           <div className="bg-white p-8 rounded-2xl border border-brand-secondary shadow-xl max-w-sm w-full">
             <h3 className="text-2xl font-black text-brand-text mb-2">Selesai!</h3>
             <p className="text-brand-text/70 mb-8">
@@ -63,24 +71,61 @@ export default function CaptureScreen({
         </div>
       )}
 
+      {/* HEADER STEP */}
+      <div className="flex items-center justify-between gap-3 border-b border-brand-secondary/70 bg-brand-bg/60 px-4 sm:px-6 py-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand-primary/80">
+            Langkah 2 dari 3
+          </p>
+          <p className="text-xs sm:text-sm text-brand-text/70">
+            Ambil foto terbaikmu untuk dimasukkan ke dalam receipt.
+          </p>
+        </div>
+        <div className="flex flex-col items-end text-[10px] sm:text-[11px] text-brand-text/60 flex-shrink-0">
+          <span className="whitespace-nowrap">
+            Frame {Math.min(photos.length + 1, totalFrames)} / {totalFrames}
+          </span>
+          <button
+            type="button"
+            onClick={onBackHome}
+            className="mt-1 text-[10px] font-semibold text-brand-primary hover:underline"
+          >
+            Ganti layout
+          </button>
+        </div>
+      </div>
+
       <div className="relative bg-black aspect-[4/3]">
-        <button
-          type="button"
-          onClick={toggleCamera}
-          className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
-        >
-          <SwitchCamera size={18} />
-        </button>
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className="w-full h-full object-cover"
-          style={{ transform: 'scaleX(-1)' }}
         />
-        <div className="absolute top-4 right-4 bg-white/15 px-3 py-1 text-xs font-bold text-white tracking-[0.3em]">
+
+        {/* LIVE FEED badge di kiri */}
+        <div className="absolute top-4 left-4 bg-white/15 px-3 py-1 text-xs font-bold text-white tracking-[0.3em]">
           LIVE FEED
+        </div>
+
+        {/* Tombol kamera & flash di kanan */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleCamera}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
+          >
+            <SwitchCamera size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={onToggleTorch}
+            disabled={facingMode === 'user'}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Zap size={18} className={isTorchOn ? 'text-yellow-300' : 'text-white'} />
+          </button>
         </div>
 
         {isFlashing && (
@@ -99,7 +144,7 @@ export default function CaptureScreen({
         )}
       </div>
 
-      <div className="space-y-6 p-6 sm:p-8">
+      <div className="space-y-6 p-6 sm:p-8 bg-gradient-to-b from-white via-brand-bg/40 to-white">
         
         {/* PREVIEW THUMBNAILS */}
         {totalFrames > 1 && (

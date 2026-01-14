@@ -23,6 +23,8 @@ export default function PhotoBooth() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [receiptTitle, setReceiptTitle] = useState('RECEIPT');
+  const [footerText, setFooterText] = useState('');
+  const [isTorchOn, setIsTorchOn] = useState(false);
 
   useEffect(() => {
     if (currentStep === 'capture' && stream && videoRef.current) {
@@ -43,6 +45,19 @@ export default function PhotoBooth() {
     }
   }, [countdown]);
 
+  const applyTorch = (activeStream: MediaStream, mode: 'user' | 'environment', torch: boolean) => {
+    const track = activeStream.getVideoTracks()[0];
+    const anyTrack: any = track;
+    if (!track || !anyTrack.getCapabilities || !anyTrack.applyConstraints) return;
+    const caps = anyTrack.getCapabilities();
+    if (!caps || !('torch' in caps) || mode !== 'environment') return;
+    try {
+      anyTrack.applyConstraints({ advanced: [{ torch }] });
+    } catch (e) {
+      console.warn('Torch not supported:', e);
+    }
+  };
+
   const startCamera = async (count: FrameCount, mode?: 'user' | 'environment') => {
     const desiredFacingMode = mode ?? facingMode;
     setFrameCount(count);
@@ -56,6 +71,7 @@ export default function PhotoBooth() {
         },
       });
       setStream(streamData);
+      applyTorch(streamData, desiredFacingMode, isTorchOn);
       setIsCameraActive(true);
       setCurrentStep('capture');
       setPhotos([]);
@@ -79,10 +95,7 @@ export default function PhotoBooth() {
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
 
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
     ctx.drawImage(videoRef.current, 0, 0);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     
     // Simpan gambar dalam kualitas tinggi (High Quality)
     const photoData = canvas.toDataURL('image/jpeg', 1.0); // Gunakan JPEG quality 1.0
@@ -142,11 +155,20 @@ export default function PhotoBooth() {
     await startCamera(frameCount, newMode);
   };
 
+  const toggleTorch = () => {
+    const next = !isTorchOn;
+    setIsTorchOn(next);
+    if (stream) {
+      applyTorch(stream, facingMode, next);
+    }
+  };
+
   const downloadReceipt = () => {
     setCurrentStep('printing');
     setPrintProgress(0);
 
     const headerText = (receiptTitle || 'RECEIPT').slice(0, 15);
+    const footer = (footerText || '').slice(0, 20);
 
     const receiptCanvas = document.createElement('canvas');
     const ctx = receiptCanvas.getContext('2d');
@@ -273,21 +295,16 @@ export default function PhotoBooth() {
         // Base untuk elemen setelah garis bawah
         yOffset = bottomLineY;
 
-        // Baris titik dekoratif di bawah garis (sebelum THANK YOU)
-        ctx.fillStyle = '#9CA3AF';
-        ctx.font = `${10 * scale}px "Courier New", monospace`;
-        ctx.textAlign = 'center';
-        const dotsText = '•   •   •   •   •   •   •   •';
-        ctx.fillText(dotsText, receiptWidth / 2, yOffset + (14 * scale));
-
-        // Jarak sebelum THANK YOU (supaya tidak mepet)
-        yOffset += (14 * scale) + (12 * scale);
+        // Jarak sebelum footer text (supaya tidak mepet)
+        yOffset += (18 * scale);
 
         // Footer Font: non-bold abu-abu seperti preview
-        ctx.fillStyle = '#4B5563';
-        ctx.font = `${12 * scale}px "Courier New", monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('THANK YOU', receiptWidth / 2, yOffset);
+        if (footer) {
+          ctx.fillStyle = '#4B5563';
+          ctx.font = `${12 * scale}px "Courier New", monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(footer.toUpperCase(), receiptWidth / 2, yOffset);
+        }
 
         let progress = 0;
         const printInterval = setInterval(() => {
@@ -335,6 +352,10 @@ export default function PhotoBooth() {
           isFlashing={isFlashing}
           countdown={countdown}
           toggleCamera={toggleCamera}
+          onBackHome={resetToHome}
+          isTorchOn={isTorchOn}
+          onToggleTorch={toggleTorch}
+          facingMode={facingMode}
         />
       )}
 
@@ -345,6 +366,8 @@ export default function PhotoBooth() {
           onReset={resetToHome}
           receiptTitle={receiptTitle}
           setReceiptTitle={setReceiptTitle}
+          footerText={footerText}
+          setFooterText={setFooterText}
         />
       )}
 

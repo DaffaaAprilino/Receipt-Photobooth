@@ -1,5 +1,5 @@
 // src/components/FrameSelector.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FrameCount } from '../types';
 
 interface Props {
@@ -9,17 +9,29 @@ interface Props {
 
 export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Props) {
   const [selectedFrameCount, setSelectedFrameCount] = useState<FrameCount>(defaultFrameCount);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <div className="w-full max-w-lg mx-auto rounded-2xl border border-white/70 bg-white/90 p-8 text-center shadow-[0_25px_80px_rgba(47,75,138,0.15)]">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-black text-brand-text">Receipt Photobooth</h1>
-        <p className="text-base text-brand-text/70">
-          Pilih jumlah frame yang mau kamu foto hari ini.
+    <div className="w-full max-w-xl mx-auto rounded-3xl border border-white/60 bg-gradient-to-b from-white/95 via-brand-bg/40 to-white/95 p-8 sm:p-10 text-center shadow-[0_28px_90px_rgba(15,23,42,0.2)] backdrop-blur-xl">
+      <div className="space-y-3">
+        <div className="inline-flex items-center rounded-full bg-brand-secondary/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-brand-primary/90">
+          Langkah 1 - Pilih layout
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-text">Receipt Photobooth</h1>
+        <p className="text-sm sm:text-base text-brand-text/70">
+          Tentukan berapa banyak foto yang akan muncul di struk kamu.
         </p>
       </div>
 
-      <div className="mt-10 grid gap-4 grid-cols-4 place-items-center">
+      <div className="mt-10 grid gap-4 grid-cols-2 sm:grid-cols-4 place-items-center">
         {([1, 2, 3, 4] as const).map(num => {
           const isActive = selectedFrameCount === num;
           return (
@@ -51,7 +63,7 @@ export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Prop
             <div className="relative rounded-xl border-[3px] border-[#D9DDE6] bg-gradient-to-b from-white to-[#F5F7FB] p-6 shadow-sm receipt-jagged-edge">
               <div className="text-center text-[18px] font-black tracking-[0.3em]">RECEIPT</div>
               <p className="mt-1 text-center text-[11px] text-brand-text/70">
-                {new Date().toLocaleDateString('id-ID')} · {new Date().toLocaleTimeString('id-ID')}
+                {currentTime.toLocaleDateString('id-ID')} · {currentTime.toLocaleTimeString('id-ID')}
               </p>
               
               <div className="mt-4 border-t border-b border-dashed border-[#D9DDE6] py-4 space-y-3">
@@ -66,14 +78,6 @@ export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Prop
                 ))}
               </div>
               
-              {/* Titik di bawah angka sebelum THANK YOU */}
-              <p className="mt-3 text-center text-[10px] tracking-[0.4em] text-brand-text/40">
-                • • • • • • • •
-              </p>
-
-              <p className="mt-2 text-center text-xs font-bold tracking-[0.4em] text-brand-text/70">
-                THANK YOU
-              </p>
             </div>
           </div>
         </div>
@@ -89,7 +93,7 @@ export default function FrameSelector({ onFrameSelect, defaultFrameCount }: Prop
         </button>
 
         <p className="text-sm text-brand-text/60">
-          Tekan tombol di atas untuk memulai foto.
+          Setelah ini kamu akan masuk ke mode kamera untuk ambil fotonya.
         </p>
       </div>
     </div>
