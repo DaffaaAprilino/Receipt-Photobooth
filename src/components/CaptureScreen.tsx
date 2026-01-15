@@ -1,7 +1,24 @@
 // src/components/CaptureScreen.tsx
 import { LegacyRef } from 'react';
 import { Camera, RotateCcw, Check, ArrowLeft, SwitchCamera, Zap } from 'lucide-react'; // Tambah icon
-import { Photo } from '../types';
+import { Photo, PhotoFilter } from '../types';
+
+const getCssFilter = (filter: PhotoFilter) => {
+  switch (filter) {
+    case 'vintage':
+      return 'sepia(0.4) contrast(1.05) brightness(1.02) saturate(1.05)';
+    case 'bittersweet':
+      return 'sepia(0.35) contrast(1.1) brightness(1.05) saturate(1.2) hue-rotate(-10deg)';
+    case 'ogVintage':
+      return 'sepia(0.6) contrast(1.03) brightness(1.0) saturate(0.9) hue-rotate(8deg)';
+    case 'blackwhite':
+      // Black & white lebih kuat: hitam pekat, putih terang
+      return 'grayscale(100%) contrast(1.35) brightness(0.98)';
+    case 'normal':
+    default:
+      return 'none';
+  }
+};
 
 interface Props {
   videoRef: LegacyRef<HTMLVideoElement>;
@@ -19,6 +36,8 @@ interface Props {
   isTorchOn: boolean;
   onToggleTorch: () => void;
   facingMode: 'user' | 'environment';
+  selectedFilter: PhotoFilter;
+  onFilterChange: (value: PhotoFilter) => void;
 }
 
 export default function CaptureScreen({
@@ -37,6 +56,8 @@ export default function CaptureScreen({
   isTorchOn,
   onToggleTorch,
   facingMode,
+  selectedFilter,
+  onFilterChange,
 }: Props) {
   return (
     <div className="mx-auto w-full rounded-3xl border border-white/60 bg-white/95 shadow-[0_28px_90px_rgba(15,23,42,0.22)] overflow-hidden relative backdrop-blur-xl">
@@ -102,6 +123,10 @@ export default function CaptureScreen({
           playsInline
           muted
           className="w-full h-full object-cover"
+          style={{
+            transform: facingMode === 'user' ? 'scaleX(-1)' : 'none',
+            filter: getCssFilter(selectedFilter),
+          }}
         />
 
         {/* LIVE FEED badge di kiri */}
@@ -145,7 +170,65 @@ export default function CaptureScreen({
       </div>
 
       <div className="space-y-6 p-6 sm:p-8 bg-gradient-to-b from-white via-brand-bg/40 to-white">
-        
+        {/* FILTER PILLS */}
+        <div className="flex flex-wrap justify-center gap-2 text-xs mb-2">
+          <button
+            type="button"
+            onClick={() => onFilterChange('normal')}
+            className={`rounded-full px-3 py-1 border text-[11px] font-semibold transition-colors ${
+              selectedFilter === 'normal'
+                ? 'bg-brand-primary text-white border-brand-primary'
+                : 'bg-white text-brand-text/70 border-brand-secondary hover:bg-brand-secondary/60'
+            }`}
+          >
+            Clean
+          </button>
+          <button
+            type="button"
+            onClick={() => onFilterChange('vintage')}
+            className={`rounded-full px-3 py-1 border text-[11px] font-semibold transition-colors ${
+              selectedFilter === 'vintage'
+                ? 'bg-brand-primary text-white border-brand-primary'
+                : 'bg-white text-brand-text/70 border-brand-secondary hover:bg-brand-secondary/60'
+            }`}
+          >
+            Warm Film
+          </button>
+          <button
+            type="button"
+            onClick={() => onFilterChange('bittersweet')}
+            className={`rounded-full px-3 py-1 border text-[11px] font-semibold transition-colors ${
+              selectedFilter === 'bittersweet'
+                ? 'bg-brand-primary text-white border-brand-primary'
+                : 'bg-white text-brand-text/70 border-brand-secondary hover:bg-brand-secondary/60'
+            }`}
+          >
+            Rose Tint
+          </button>
+          <button
+            type="button"
+            onClick={() => onFilterChange('ogVintage')}
+            className={`rounded-full px-3 py-1 border text-[11px] font-semibold transition-colors ${
+              selectedFilter === 'ogVintage'
+                ? 'bg-brand-primary text-white border-brand-primary'
+                : 'bg-white text-brand-text/70 border-brand-secondary hover:bg-brand-secondary/60'
+            }`}
+          >
+            Dusty Retro
+          </button>
+          <button
+            type="button"
+            onClick={() => onFilterChange('blackwhite')}
+            className={`rounded-full px-3 py-1 border text-[11px] font-semibold transition-colors ${
+              selectedFilter === 'blackwhite'
+                ? 'bg-brand-primary text-white border-brand-primary'
+                : 'bg-white text-brand-text/70 border-brand-secondary hover:bg-brand-secondary/60'
+            }`}
+          >
+            Black &amp; White
+          </button>
+        </div>
+
         {/* PREVIEW THUMBNAILS */}
         {totalFrames > 1 && (
           <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${totalFrames}, 1fr)` }}>
@@ -163,7 +246,7 @@ export default function CaptureScreen({
                       src={photo.data} 
                       alt={`Preview ${idx}`} 
                       className="h-full w-full object-cover"
-                      style={{ filter: 'grayscale(100%) contrast(1.1)' }}
+                      style={{ filter: getCssFilter(selectedFilter) }}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs font-bold text-gray-300">

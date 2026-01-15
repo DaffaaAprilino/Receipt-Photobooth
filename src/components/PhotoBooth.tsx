@@ -1,11 +1,33 @@
 // src/components/PhotoBooth.tsx
 import { useRef, useState, useEffect } from 'react';
-import { FrameCount, Photo, Step } from '../types';
+import { FrameCount, Photo, Step, PhotoFilter } from '../types';
 
 import FrameSelector from './FrameSelector';
 import CaptureScreen from './CaptureScreen';
 import ResultScreen from './ResultScreen';
 import PrintingOverlay from './PrintingOverlay';
+
+// Filter yang dipakai saat export ke canvas (hasil download)
+const getCanvasFilter = (filter: PhotoFilter) => {
+  switch (filter) {
+    case 'vintage':
+      // Vintage hangat, agak kuning
+      return 'sepia(0.4) contrast(1.05) brightness(1.02) saturate(1.05)';
+    case 'bittersweet':
+      // Warm reddish ala preset "bittersweet"
+      return 'sepia(0.35) contrast(1.1) brightness(1.05) saturate(1.2) hue-rotate(-10deg)';
+    case 'ogVintage':
+      // OG vintage lebih pudar, agak kehijauan
+      return 'sepia(0.6) contrast(1.03) brightness(1.0) saturate(0.9) hue-rotate(8deg)';
+    case 'blackwhite':
+      // Black & white kontras tinggi untuk look receipt / nokia jadul
+      return 'grayscale(100%) contrast(1.35) brightness(0.98)';
+    case 'normal':
+    default:
+      // Normal / tanpa filter
+      return 'none';
+  }
+};
 
 export default function PhotoBooth() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -23,8 +45,8 @@ export default function PhotoBooth() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [receiptTitle, setReceiptTitle] = useState('RECEIPT');
-  const [footerText, setFooterText] = useState('');
   const [isTorchOn, setIsTorchOn] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<PhotoFilter>('normal');
 
   useEffect(() => {
     if (currentStep === 'capture' && stream && videoRef.current) {
@@ -95,7 +117,15 @@ export default function PhotoBooth() {
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
 
-    ctx.drawImage(videoRef.current, 0, 0);
+    if (facingMode === 'user') {
+      // Flip horizontal untuk menghilangkan efek mirror front camera
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoRef.current, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    } else {
+      ctx.drawImage(videoRef.current, 0, 0);
+    }
     
     // Simpan gambar dalam kualitas tinggi (High Quality)
     const photoData = canvas.toDataURL('image/jpeg', 1.0); // Gunakan JPEG quality 1.0
@@ -168,7 +198,6 @@ export default function PhotoBooth() {
     setPrintProgress(0);
 
     const headerText = (receiptTitle || 'RECEIPT').slice(0, 15);
-    const footer = (footerText || '').slice(0, 20);
 
     const receiptCanvas = document.createElement('canvas');
     const ctx = receiptCanvas.getContext('2d');
@@ -244,12 +273,15 @@ export default function PhotoBooth() {
         if (tempCtx) {
           // Setting kualitas tinggi untuk crop
           tempCtx.imageSmoothingEnabled = true;
-          tempCtx.imageSmoothingQuality = 'high';
+            tempCtx.imageSmoothingQuality = 'high';
 
-          const tempImg = new Image();
-          tempImg.onload = () => {
-            const targetRatio = photoWidth / photoHeight;
-            const imgRatio = tempImg.width / tempImg.height;
+            // Terapkan filter sesuai pilihan user
+            tempCtx.filter = getCanvasFilter(selectedFilter);
+
+            const tempImg = new Image();
+            tempImg.onload = () => {
+              const targetRatio = photoWidth / photoHeight;
+              const imgRatio = tempImg.width / tempImg.height;
 
             let sx = 0, sy = 0, sWidth = tempImg.width, sHeight = tempImg.height;
 
@@ -261,7 +293,6 @@ export default function PhotoBooth() {
                 sy = (tempImg.height - sHeight) / 2;
             }
 
-            tempCtx.filter = 'grayscale(100%) contrast(1.1)'; 
             tempCtx.drawImage(
                 tempImg, 
                 sx, sy, sWidth, sHeight,
@@ -298,13 +329,7 @@ export default function PhotoBooth() {
         // Jarak sebelum footer text (supaya tidak mepet)
         yOffset += (18 * scale);
 
-        // Footer Font: non-bold abu-abu seperti preview
-        if (footer) {
-          ctx.fillStyle = '#4B5563';
-          ctx.font = `${12 * scale}px "Courier New", monospace`;
-          ctx.textAlign = 'center';
-          ctx.fillText(footer.toUpperCase(), receiptWidth / 2, yOffset);
-        }
+        // (Footer text dihapus, sisakan whitespace di bawah)
 
         let progress = 0;
         const printInterval = setInterval(() => {
@@ -356,6 +381,8 @@ export default function PhotoBooth() {
           isTorchOn={isTorchOn}
           onToggleTorch={toggleTorch}
           facingMode={facingMode}
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
         />
       )}
 
@@ -366,8 +393,7 @@ export default function PhotoBooth() {
           onReset={resetToHome}
           receiptTitle={receiptTitle}
           setReceiptTitle={setReceiptTitle}
-          footerText={footerText}
-          setFooterText={setFooterText}
+          selectedFilter={selectedFilter}
         />
       )}
 

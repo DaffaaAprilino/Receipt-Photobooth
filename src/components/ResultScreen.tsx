@@ -1,7 +1,7 @@
 // src/components/ResultScreen.tsx
 import { Download, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Photo } from '../types';
+import { Photo, PhotoFilter } from '../types';
 
 interface Props {
   photos: Photo[];
@@ -9,11 +9,31 @@ interface Props {
   onReset: () => void;
   receiptTitle: string;
   setReceiptTitle: (value: string) => void;
-  footerText: string;
-  setFooterText: (value: string) => void;
+  selectedFilter: PhotoFilter;
 }
 
-export default function ResultScreen({ photos, onDownload, onReset, receiptTitle, setReceiptTitle, footerText, setFooterText }: Props) {
+const getCssFilter = (filter: PhotoFilter) => {
+  switch (filter) {
+    case 'vintage':
+      // Nuansa jadul / nokia: sedikit sepia + kontras
+      return 'sepia(0.4) contrast(1.05) brightness(1.02) saturate(1.05)';
+    case 'bittersweet':
+      // Warm reddish ala preset "bittersweet"
+      return 'sepia(0.35) contrast(1.1) brightness(1.05) saturate(1.2) hue-rotate(-10deg)';
+    case 'ogVintage':
+      // OG vintage lebih pudar
+      return 'sepia(0.6) contrast(1.03) brightness(1.0) saturate(0.9) hue-rotate(8deg)';
+    case 'blackwhite':
+      // Black & white kontras tinggi
+      return 'grayscale(100%) contrast(1.35) brightness(0.98)';
+    case 'normal':
+    default:
+      // Normal / tanpa filter
+      return 'none';
+  }
+};
+
+export default function ResultScreen({ photos, onDownload, onReset, receiptTitle, setReceiptTitle, selectedFilter }: Props) {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   useEffect(() => {
@@ -59,7 +79,7 @@ export default function ResultScreen({ photos, onDownload, onReset, receiptTitle
               {photos.map((photo, idx) => (
                 <div
                   key={idx}
-                  className="border border-[#D9DDE6] bg-[#EEF1F8]"
+                  className="border border-[#D9DDE6] bg-[#EEF1F8] overflow-hidden"
                   // REVISI: Aspek Rasio Landscape 4/3
                   style={{ aspectRatio: '4 / 3' }}
                 >
@@ -67,17 +87,11 @@ export default function ResultScreen({ photos, onDownload, onReset, receiptTitle
                     src={photo.data}
                     alt={`Photo ${idx + 1}`}
                     className="h-full w-full object-cover"
-                    style={{ filter: 'grayscale(100%) contrast(1.08)' }}
+                    style={{ filter: getCssFilter(selectedFilter) }}
                   />
                 </div>
               ))}
             </div>
-
-            {footerText && (
-              <p className="mt-3 text-center text-xs font-bold tracking-[0.3em] text-brand-text/70">
-                {footerText.toUpperCase()}
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -86,19 +100,6 @@ export default function ResultScreen({ photos, onDownload, onReset, receiptTitle
         Judul receipt bisa kamu ganti sendiri (maks. 15 karakter) di kolom di atas.
       </p>
 
-      <div className="mt-3 flex flex-col gap-2 max-w-sm mx-auto text-left">
-        <label className="text-xs font-semibold text-brand-text/70">
-          Teks bawah (opsional)
-        </label>
-        <input
-          type="text"
-          value={footerText}
-          onChange={(e) => setFooterText(e.target.value.slice(0, 20))}
-          maxLength={20}
-          className="w-full rounded-full border border-brand-secondary bg-white px-4 py-2 text-sm text-brand-text focus:border-brand-primary focus:outline-none"
-          placeholder="Teks bawah (boleh dikosongkan)"
-        />
-      </div>
 
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:justify-center">
         <button
