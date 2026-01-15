@@ -80,27 +80,40 @@ export default function PhotoBooth() {
     }
   };
 
-  const startCamera = async (count: FrameCount, mode?: 'user' | 'environment') => {
+  const startCamera = async (
+    count: FrameCount,
+    mode?: 'user' | 'environment',
+    options?: { resetPhotos?: boolean }
+  ) => {
     const desiredFacingMode = mode ?? facingMode;
+    const { resetPhotos = false } = options ?? {};
+
+    // Kalau ganti layout dari step 1, update jumlah frame
     setFrameCount(count);
+
     try {
       // Minta resolusi Full HD biar sumber gambarnya tajam
       const streamData = await navigator.mediaDevices.getUserMedia({
-        video: { 
-            facingMode: desiredFacingMode,
-            width: { ideal: 1920 }, // Naikkan ke Full HD
-            height: { ideal: 1080 } 
+        video: {
+          facingMode: desiredFacingMode,
+          width: { ideal: 1920 }, // Naikkan ke Full HD
+          height: { ideal: 1080 },
         },
       });
       setStream(streamData);
       applyTorch(streamData, desiredFacingMode, isTorchOn);
       setIsCameraActive(true);
       setCurrentStep('capture');
-      setPhotos([]);
-      setIsReviewing(false);
+
+      // Reset foto hanya kalau mulai sesi baru dari awal
+      if (resetPhotos) {
+        setPhotos([]);
+        setIsReviewing(false);
+      }
+
       setFacingMode(desiredFacingMode);
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      console.error('Error accessing kamera:', error);
       alert('Tidak bisa mengakses kamera');
     }
   };
@@ -180,9 +193,9 @@ export default function PhotoBooth() {
 
   const toggleCamera = async () => {
     const newMode: 'user' | 'environment' = facingMode === 'user' ? 'environment' : 'user';
-    // Matikan kamera saat ini sebelum mengganti
+    // Matikan kamera saat ini sebelum mengganti, tapi JANGAN reset foto
     stopCamera();
-    await startCamera(frameCount, newMode);
+    await startCamera(frameCount, newMode, { resetPhotos: false });
   };
 
   const toggleTorch = () => {
@@ -359,7 +372,7 @@ export default function PhotoBooth() {
     <div className="w-full max-w-2xl">
       {currentStep === 'select' && (
         <FrameSelector
-          onFrameSelect={startCamera}
+          onFrameSelect={(count) => startCamera(count, undefined, { resetPhotos: true })}
           defaultFrameCount={frameCount}
         />
       )}
