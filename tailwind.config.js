@@ -8,14 +8,17 @@ export default {
     extend: {
       fontFamily: {
         'sans': ['Nunito', 'sans-serif'],
+        'heading': ['Fredoka', 'sans-serif'],
       },
       colors: {
-        'brand-bg': '#F3F6FB',
+        'brand-bg': '#F7F5F0',
         'brand-surface': '#FFFFFF',
-        'brand-primary': '#2F4B8A',
-        'brand-primary-hover': '#253B6A',
-        'brand-secondary': '#E2E7F1',
-        'brand-text': '#1F2533'
+        'brand-primary': '#3D5245',
+        'brand-primary-hover': '#2D3F34',
+        'brand-secondary': '#E8E5DD',
+        'brand-text': '#2E2A27',
+        'brand-accent': '#C87A53',
+        'brand-accent-hover': '#B46B46'
       }
     },
   },

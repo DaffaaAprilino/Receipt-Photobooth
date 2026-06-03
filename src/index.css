@@ -3,9 +3,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paper noise effect */
+.paper-texture {
+  position: relative;
+}
+
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.045;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 10;
+}
+
+/* Premium shadows & shapes */
+.shadow-premium {
+  box-shadow: 0 10px 30px -10px rgba(46, 42, 39, 0.08), 
+              0 20px 40px -15px rgba(46, 42, 39, 0.12);
+}
+
+.shadow-receipt {
+  box-shadow: 0 15px 35px -10px rgba(46, 42, 39, 0.1), 
+              0 5px 15px -5px rgba(46, 42, 39, 0.05),
+              0 0 0 1px rgba(46, 42, 39, 0.05);
+}
+
+/* Realistic jagged edge for thermal receipts */
 .receipt-jagged-edge {
   position: relative;
-  overflow: hidden;
+  padding-bottom: 16px !important; /* Tambahkan ruang aman sebelum gigi gergaji */
 }
 
 .receipt-jagged-edge::after {
@@ -13,10 +41,36 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -10px;
-  height: 20px;
+  bottom: 0;
+  height: 8px;
   pointer-events: none;
   background:
-    linear-gradient(-45deg, transparent 75%, #F3F6FB 75%) 0 0/16px 16px repeat-x,
-    linear-gradient(45deg, transparent 75%, #F3F6FB 75%) 8px 0/16px 16px repeat-x;
+    linear-gradient(-45deg, transparent 75%, #F7F5F0 75%) 0 0/10px 10px repeat-x,
+    linear-gradient(45deg, transparent 75%, #F7F5F0 75%) 5px 0/10px 10px repeat-x;
+}
+
+/* Indicator blinking animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.animate-blink {
+  animation: blink 1.5s infinite;
+}
+
+/* Roll-out animation for printing */
+@keyframes roll-out {
+  0% {
+    transform: translateY(-80%);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-roll-out {
+  animation: roll-out 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

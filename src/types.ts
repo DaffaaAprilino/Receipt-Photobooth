@@ -8,3 +8,5 @@ export interface Photo {
   data: string;
   timestamp: Date;
 }
+
+

@@ -1,5 +1,5 @@
 // src/components/ResultScreen.tsx
-import { Download, RotateCcw } from 'lucide-react';
+import { Download, RotateCcw, Sparkles, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Photo, PhotoFilter } from '../types';
 
@@ -8,118 +8,237 @@ interface Props {
   onDownload: () => void;
   onReset: () => void;
   receiptTitle: string;
-  setReceiptTitle: (value: string) => void;
   selectedFilter: PhotoFilter;
 }
 
 const getCssFilter = (filter: PhotoFilter) => {
   switch (filter) {
     case 'vintage':
-      // Nuansa jadul / nokia: sedikit sepia + kontras
       return 'sepia(0.4) contrast(1.05) brightness(1.02) saturate(1.05)';
     case 'bittersweet':
-      // Warm reddish ala preset "bittersweet"
       return 'sepia(0.35) contrast(1.1) brightness(1.05) saturate(1.2) hue-rotate(-10deg)';
     case 'ogVintage':
-      // OG vintage lebih pudar
       return 'sepia(0.6) contrast(1.03) brightness(1.0) saturate(0.9) hue-rotate(8deg)';
     case 'blackwhite':
-      // Black & white kontras tinggi
       return 'grayscale(100%) contrast(1.35) brightness(0.98)';
     case 'normal':
     default:
-      // Normal / tanpa filter
       return 'none';
   }
 };
 
-export default function ResultScreen({ photos, onDownload, onReset, receiptTitle, setReceiptTitle, selectedFilter }: Props) {
+export default function ResultScreen({
+  photos,
+  onDownload,
+  onReset,
+  receiptTitle,
+  selectedFilter
+}: Props) {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [transactionId, setTransactionId] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
+    // Bikin transaction ID acak sekali saat komponen diload
+    const randomNum = Math.floor(Math.random() * 900000 + 100000);
+    setTransactionId(`#PB-${randomNum}`);
+
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="mx-auto w-full rounded-3xl border border-white/60 bg-white/95 p-6 text-center shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:p-10 backdrop-blur-xl">
-      <div className="space-y-2">
-        <p className="inline-flex items-center rounded-full bg-brand-secondary/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-brand-primary/90">
-          Langkah 3 - Simpan hasil
+    <div className="mx-auto w-full rounded-3xl border border-brand-secondary bg-white p-6 sm:p-10 shadow-premium backdrop-blur-xl paper-texture overflow-hidden">
+      
+      {/* HEADER LANGKAH */}
+      <div className="text-center space-y-3 mb-10 pb-6 border-b border-brand-secondary/60">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/15 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
+          <Sparkles size={12} />
+          Langkah 3 - Simpan &amp; Cetak Hasil
+        </div>
+        <h2 className="text-3xl font-heading font-bold text-brand-text">Receipt Kamu Siap!</h2>
+        <p className="text-sm text-brand-text/70 max-w-md mx-auto">
+          Lihat pratinjau struk thermal kamu di kolom kiri dan unduh hasilnya langsung ke perangkatmu.
         </p>
-        <h2 className="text-3xl font-black text-brand-text">Receipt kamu siap!</h2>
-        <p className="text-sm sm:text-base text-brand-text/70">Cek dulu preview-nya di bawah, lalu download kalau sudah pas.</p>
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <div className="w-full max-w-sm font-['Courier_New',monospace]">
-          <div
-            id="receipt-preview"
-            className="rounded-xl border-[3px] border-[#D9DDE6] bg-gradient-to-b from-white to-[#F5F7FB] px-7 py-8 shadow-[0_25px_45px_rgba(0,0,0,0.08)] receipt-jagged-edge"
-          >
-            <div className="text-center">
-              <input
-                type="text"
-                value={receiptTitle}
-                onChange={(e) => setReceiptTitle(e.target.value.slice(0, 15))}
-                maxLength={15}
-                className="w-full bg-transparent text-center text-[20px] font-black tracking-[0.4em] outline-none border-none placeholder:text-brand-text/30"
-                aria-label="Judul struk"
-                placeholder="RECEIPT (bisa diubah)"
-              />
-            </div>
-            <p className="mt-2 text-center text-[12px] text-brand-text/70">
-              {currentTime.toLocaleDateString('id-ID')} · {currentTime.toLocaleTimeString('id-ID')}
-            </p>
+      {/* GRID LAYOUT UTAMA: 2 Kolom (Desktop), 1 Kolom (Mobile) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center text-left">
+        
+        {/* KOLOM KIRI: MOCKUP STRUK THERMAL (45% lebar) */}
+        <div className="md:col-span-5 flex justify-center w-full">
+          <div className="w-full max-w-[280px] font-['Courier_New',monospace] select-none text-brand-text">
+            <div
+              id="receipt-preview"
+              className="rounded-2xl border-[3px] border-brand-secondary bg-white px-6 py-8 shadow-receipt receipt-jagged-edge relative overflow-hidden"
+            >
+              {/* Judul Struk */}
+              <div className="text-center text-[18px] font-bold tracking-[0.3em] uppercase break-words">
+                {receiptTitle || 'RECEIPT'}
+              </div>
+              <p className="mt-2 text-center text-[10px] text-brand-text/65 leading-tight">
+                {currentTime.toLocaleDateString('id-ID')} · {currentTime.toLocaleTimeString('id-ID')}
+              </p>
 
-            <div className="mt-5 border-y border-dashed border-[#D9DDE6] py-5 space-y-4">
-              {photos.map((photo, idx) => (
-                <div
-                  key={idx}
-                  className="border border-[#D9DDE6] bg-[#EEF1F8] overflow-hidden"
-                  // REVISI: Aspek Rasio Landscape 4/3
-                  style={{ aspectRatio: '4 / 3' }}
-                >
-                  <img
-                    src={photo.data}
-                    alt={`Photo ${idx + 1}`}
-                    className="h-full w-full object-cover"
-                    style={{ filter: getCssFilter(selectedFilter) }}
-                  />
+              {/* Garis Dashed */}
+              <div className="mt-4 border-t border-dashed border-brand-secondary"></div>
+
+              {/* Area Foto-foto */}
+              <div className="py-4 space-y-4">
+                {photos.map((photo, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-brand-secondary bg-brand-bg/30 overflow-hidden rounded-lg aspect-[4/3]"
+                  >
+                    <img
+                      src={photo.data}
+                      alt={`Photo ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                      style={{ filter: getCssFilter(selectedFilter) }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Garis Dashed */}
+              <div className="border-t border-dashed border-brand-secondary"></div>
+
+              {/* Daftar Barang Belanjaan Lucu */}
+              <div className="py-2.5 text-[8px] space-y-1 font-bold uppercase tracking-wider pl-1 pr-1">
+                <div className="text-[9px] text-brand-text/50 mb-1">ITEMS:</div>
+                {Array.from({ length: photos.length }).map((_, idx) => {
+                  const itemNames = ["SWEET SMILE", "CUTE POSE", "SHINY MOMENT", "HAPPY VIBES"];
+                  return (
+                    <div key={idx} className="flex justify-between pl-1">
+                      <span>1x {itemNames[idx % itemNames.length]}</span>
+                      <span>0.00</span>
+                    </div>
+                  );
+                })}
+                <div className="border-t border-dashed border-brand-secondary my-1.5"></div>
+                <div className="flex justify-between text-[9px] font-extrabold">
+                  <span>TOTAL AMOUNT:</span>
+                  <span>0.00</span>
                 </div>
-              ))}
+              </div>
+
+              {/* Garis Dashed */}
+              <div className="border-t border-dashed border-brand-secondary"></div>
+
+              {/* Metadata Struk */}
+              <div className="py-3 text-[9px] space-y-1 text-brand-text/80 font-bold uppercase tracking-wider">
+                <div className="flex justify-between">
+                  <span>QTY:</span>
+                  <span>{photos.length} PHOTO(S)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>TRANS ID:</span>
+                  <span>{transactionId}</span>
+                </div>
+                <div className="flex justify-between flex-wrap gap-x-1">
+                  <span>PAYMENT:</span>
+                  <span>SMILE &amp; LOVE</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>TAX:</span>
+                  <span>0.00%</span>
+                </div>
+              </div>
+
+              {/* Garis Dashed */}
+              <div className="border-t border-dashed border-brand-secondary"></div>
+
+              {/* Barcode Mock - CENTERED */}
+              <div className="mt-4 pt-1 flex flex-col items-center gap-1.5">
+                <div className="h-7 w-full flex items-center justify-center opacity-75">
+                  <div className="h-full flex gap-[1.5px] justify-center">
+                    <div className="h-full w-[2px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                    <div className="h-full w-[3px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                    <div className="h-full w-[2px] bg-brand-text"></div>
+                    <div className="h-full w-[4px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                    <div className="h-full w-[2px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                    <div className="h-full w-[3px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                    <div className="h-full w-[2px] bg-brand-text"></div>
+                    <div className="h-full w-[2px] bg-brand-text"></div>
+                    <div className="h-full w-[4px] bg-brand-text"></div>
+                    <div className="h-full w-[1px] bg-brand-text"></div>
+                  </div>
+                </div>
+                <span className="text-[7px] text-brand-text/50 tracking-[0.25em] font-sans font-bold">#THANK-YOU</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <p className="mt-4 text-xs sm:text-sm text-brand-text/60">
-        Judul receipt bisa kamu ganti sendiri (maks. 15 karakter) di kolom di atas.
-      </p>
+        {/* KOLOM KANAN: RINCIAN CETAK STRUK & AKSI (55% lebar) */}
+        <div className="md:col-span-7 space-y-6">
+          <div className="rounded-2xl border border-brand-secondary bg-brand-bg/25 p-5 sm:p-6 space-y-5">
+            <h3 className="text-lg font-heading font-bold text-brand-text flex items-center gap-2">
+              <Sparkles size={18} className="text-brand-accent animate-pulse" />
+              Rincian Cetak Struk
+            </h3>
+            
+            {/* List of Details with Icons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold uppercase tracking-wider text-brand-text/75">
+              <div className="p-3.5 bg-white border border-brand-secondary rounded-2xl flex flex-col gap-1 shadow-sm">
+                <span className="text-[10px] opacity-50">Tipe Layout</span>
+                <span className="text-sm font-bold font-heading text-brand-primary">{photos.length} Frame(s)</span>
+              </div>
+              
+              <div className="p-3.5 bg-white border border-brand-secondary rounded-2xl flex flex-col gap-1 shadow-sm">
+                <span className="text-[10px] opacity-50">Resolusi Ekspor</span>
+                <span className="text-sm font-bold font-heading text-emerald-600">⚡ Ultra HD (1280px)</span>
+              </div>
 
+              <div className="p-3.5 bg-white border border-brand-secondary rounded-2xl flex flex-col gap-1 shadow-sm">
+                <span className="text-[10px] opacity-50">Filter Kamera</span>
+                <span className="text-sm font-bold font-heading text-brand-primary capitalize font-sans">
+                  {selectedFilter === 'blackwhite' 
+                    ? 'B&W Thermal' 
+                    : selectedFilter === 'normal' 
+                      ? 'Original' 
+                      : selectedFilter.replace(/([A-Z])/g, ' $1')}
+                </span>
+              </div>
+            </div>
 
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:justify-center">
-        <button
-          onClick={onDownload}
-          className="flex-1 rounded-full bg-brand-primary px-8 py-4 text-lg font-bold text-white shadow-[0_18px_40px_rgba(47,75,138,0.35)] transition-transform hover:scale-[1.02]"
-        >
-          <span className="inline-flex items-center justify-center gap-2">
-            <Download size={20} />
-            Download Receipt
-          </span>
-        </button>
-        <button
-          onClick={onReset}
-          className="flex-1 rounded-full border-2 border-brand-primary px-8 py-4 text-lg font-bold text-brand-primary transition-colors hover:bg-brand-secondary"
-        >
-          <span className="inline-flex items-center justify-center gap-2">
-            <RotateCcw size={20} />
-            Kembali ke awal
-          </span>
-        </button>
+            {/* Hint Box */}
+            <div className="flex gap-2.5 items-start p-4 bg-white/85 border border-brand-secondary rounded-2xl text-xs text-brand-text/70 leading-relaxed shadow-sm">
+              <Settings size={18} className="text-brand-accent flex-shrink-0 mt-0.5" />
+              <span>
+                Tekan tombol **Cetak &amp; Download** untuk memicu printer virtual. File gambar berkualitas HD akan otomatis tersimpan ke perangkat kamu.
+              </span>
+            </div>
+          </div>
+
+          {/* TOMBOL AKSI UTAMA */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={onDownload}
+              className="flex-1 rounded-full bg-brand-primary hover:bg-brand-primary-hover py-4 text-base font-bold text-white shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:shadow-brand-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer font-heading uppercase tracking-wider"
+            >
+              <Download size={18} />
+              Cetak &amp; Download Struk
+            </button>
+            
+            <button
+              onClick={onReset}
+              className="rounded-full border-2 border-brand-secondary bg-white hover:bg-brand-bg px-6 py-4 text-sm font-bold text-brand-text/70 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider font-heading"
+            >
+              <RotateCcw size={16} />
+              Mulai Ulang
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
