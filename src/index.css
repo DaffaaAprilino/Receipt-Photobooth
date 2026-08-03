@@ -3,7 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Paper noise effect */
+/* ============================================
+   PAPER TEXTURE
+   ============================================ */
 .paper-texture {
   position: relative;
 }
@@ -16,9 +18,12 @@
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   z-index: 10;
+  border-radius: inherit;
 }
 
-/* Premium shadows & shapes */
+/* ============================================
+   PREMIUM SHADOWS
+   ============================================ */
 .shadow-premium {
   box-shadow: 0 10px 30px -10px rgba(46, 42, 39, 0.08), 
               0 20px 40px -15px rgba(46, 42, 39, 0.12);
@@ -30,10 +35,12 @@
               0 0 0 1px rgba(46, 42, 39, 0.05);
 }
 
-/* Realistic jagged edge for thermal receipts */
+/* ============================================
+   JAGGED RECEIPT EDGE
+   ============================================ */
 .receipt-jagged-edge {
   position: relative;
-  padding-bottom: 16px !important; /* Tambahkan ruang aman sebelum gigi gergaji */
+  padding-bottom: 16px !important;
 }
 
 .receipt-jagged-edge::after {
@@ -49,28 +56,178 @@
     linear-gradient(45deg, transparent 75%, #F7F5F0 75%) 5px 0/10px 10px repeat-x;
 }
 
-/* Indicator blinking animation */
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+/* Blink for printer LED */
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  50% { opacity: 0.25; }
 }
-
 .animate-blink {
-  animation: blink 1.5s infinite;
+  animation: blink 1s infinite;
 }
 
-/* Roll-out animation for printing */
+/* Old roll-out (kept for backward compat) */
 @keyframes roll-out {
-  0% {
-    transform: translateY(-80%);
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  0% { transform: translateY(-80%); opacity: 0.3; }
+  100% { transform: translateY(0); opacity: 1; }
 }
-
 .animate-roll-out {
   animation: roll-out 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── PRINT SLIDE: Receipt exiting printer slot ── */
+@keyframes print-slide-out {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-print-slide {
+  animation: print-slide-out 3.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stepped version: receipt moves in jerky increments like real thermal printer */
+@keyframes print-slide-stepped {
+  0%   { transform: translateY(-100%); }
+  5%   { transform: translateY(-90%); }
+  10%  { transform: translateY(-78%); }
+  20%  { transform: translateY(-62%); }
+  30%  { transform: translateY(-50%); }
+  38%  { transform: translateY(-48%); }
+  45%  { transform: translateY(-36%); }
+  52%  { transform: translateY(-34%); }
+  60%  { transform: translateY(-20%); }
+  70%  { transform: translateY(-18%); }
+  80%  { transform: translateY(-8%); }
+  90%  { transform: translateY(-7%); }
+  100% { transform: translateY(0%); }
+}
+
+/* ── FADE UP: Enter from bottom (for staggered elements) ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger delays */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+.animate-delay-600 { animation-delay: 0.6s; }
+
+/* ── TYPEWRITER CURSOR ── */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor-blink {
+  animation: cursor-blink 0.9s step-start infinite;
+}
+
+/* ── FLOAT: Subtle up-down for decorative elements ── */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(var(--float-rotate, -6deg)); }
+  50%       { transform: translateY(-8px) rotate(var(--float-rotate, -6deg)); }
+}
+.animate-float {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+/* ── SCAN LINE: Thermal scan line moving on receipt ── */
+@keyframes scan-line {
+  0%   { top: 0%; opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+.animate-scan-line {
+  animation: scan-line 2s linear infinite;
+}
+
+/* ── PAPER TEAR: shake before done ── */
+@keyframes paper-tear {
+  0%   { transform: translateX(0) rotate(0deg); }
+  20%  { transform: translateX(-3px) rotate(-0.5deg); }
+  40%  { transform: translateX(3px) rotate(0.5deg); }
+  60%  { transform: translateX(-2px) rotate(-0.3deg); }
+  80%  { transform: translateX(2px) rotate(0.3deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+.animate-paper-tear {
+  animation: paper-tear 0.4s ease-in-out;
+}
+
+/* ── SHINE: Sweep shine over button ── */
+@keyframes shine-sweep {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  transition: none;
+}
+.btn-shine:hover::after {
+  animation: shine-sweep 0.5s ease-in-out;
+}
+
+/* ── SCRAPBOOK TAPE ── */
+.tape-decoration {
+  position: relative;
+}
+.tape-decoration::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 48px;
+  height: 16px;
+  background: rgba(200, 122, 83, 0.25);
+  border-radius: 2px;
+  z-index: 20;
+}
+
+/* ── SCRAPBOOK PHOTO CARD ── */
+.photo-card-scrapbook {
+  background: white;
+  padding: 8px 8px 28px 8px;
+  box-shadow: 
+    0 4px 14px rgba(46,42,39,0.12),
+    0 1px 3px rgba(46,42,39,0.08);
+  transform-origin: center;
+}
+
+/* ============================================
+   REDUCED MOTION ACCESSIBILITY
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-print-slide,
+  .animate-float,
+  .animate-float-slow,
+  .animate-fade-up,
+  .animate-scan-line,
+  .animate-blink,
+  .cursor-blink {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

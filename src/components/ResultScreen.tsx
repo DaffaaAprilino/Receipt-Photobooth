@@ -1,5 +1,5 @@
 // src/components/ResultScreen.tsx
-import { Download, RotateCcw, Sparkles, Settings } from 'lucide-react';
+import { Download, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Photo, PhotoFilter } from '../types';
 
@@ -50,16 +50,18 @@ export default function ResultScreen({
   }, []);
 
   return (
-    <div className="mx-auto w-full rounded-3xl border border-brand-secondary bg-white p-6 sm:p-10 shadow-premium backdrop-blur-xl paper-texture overflow-hidden">
+    <div className="mx-auto w-full rounded-3xl border border-brand-secondary bg-white/80 backdrop-blur-sm p-6 sm:p-10 shadow-premium paper-texture overflow-hidden animate-fade-up">
       
       {/* HEADER LANGKAH */}
       <div className="text-center space-y-3 mb-10 pb-6 border-b border-brand-secondary/60">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/15 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
-          <Sparkles size={12} />
-          Langkah 3 - Simpan &amp; Cetak Hasil
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/12 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+          </svg>
+          Langkah 3  Simpan &amp; Cetak Hasil
         </div>
         <h2 className="text-3xl font-heading font-bold text-brand-text">Receipt Kamu Siap!</h2>
-        <p className="text-sm text-brand-text/70 max-w-md mx-auto">
+        <p className="text-sm text-brand-text/60 max-w-md mx-auto">
           Lihat pratinjau struk thermal kamu di kolom kiri dan unduh hasilnya langsung ke perangkatmu.
         </p>
       </div>
@@ -69,7 +71,14 @@ export default function ResultScreen({
         
         {/* KOLOM KIRI: MOCKUP STRUK THERMAL (45% lebar) */}
         <div className="md:col-span-5 flex justify-center w-full">
-          <div className="w-full max-w-[280px] font-['Courier_New',monospace] select-none text-brand-text">
+          <div className="w-full max-w-[280px] font-['Courier_New',monospace] select-none text-brand-text animate-fade-up animate-delay-100">
+            {/* Tape scrapbook decoration */}
+            <div className="flex justify-center mb-1">
+              <div
+                className="w-12 h-4 rounded-sm"
+                style={{ background: 'rgba(200,122,83,0.22)', transform: 'rotate(-1.5deg)' }}
+              />
+            </div>
             <div
               id="receipt-preview"
               className="rounded-2xl border-[3px] border-brand-secondary bg-white px-6 py-8 shadow-receipt receipt-jagged-edge relative overflow-hidden"
@@ -179,10 +188,12 @@ export default function ResultScreen({
         </div>
 
         {/* KOLOM KANAN: RINCIAN CETAK STRUK & AKSI (55% lebar) */}
-        <div className="md:col-span-7 space-y-6">
-          <div className="rounded-2xl border border-brand-secondary bg-brand-bg/25 p-5 sm:p-6 space-y-5">
+        <div className="md:col-span-7 space-y-6 animate-fade-up animate-delay-200">
+          <div className="rounded-2xl border border-brand-secondary bg-white/60 backdrop-blur-sm p-5 sm:p-6 space-y-5">
             <h3 className="text-lg font-heading font-bold text-brand-text flex items-center gap-2">
-              <Sparkles size={18} className="text-brand-accent animate-pulse" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-accent">
+                <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+              </svg>
               Rincian Cetak Struk
             </h3>
             
@@ -211,10 +222,12 @@ export default function ResultScreen({
             </div>
 
             {/* Hint Box */}
-            <div className="flex gap-2.5 items-start p-4 bg-white/85 border border-brand-secondary rounded-2xl text-xs text-brand-text/70 leading-relaxed shadow-sm">
-              <Settings size={18} className="text-brand-accent flex-shrink-0 mt-0.5" />
+            <div className="flex gap-2.5 items-start p-4 bg-brand-primary/5 border border-brand-primary/15 rounded-2xl text-xs text-brand-text/65 leading-relaxed">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary flex-shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+              </svg>
               <span>
-                Tekan tombol **Cetak &amp; Download** untuk memicu printer virtual. File gambar berkualitas HD akan otomatis tersimpan ke perangkat kamu.
+                Tekan <strong>Cetak &amp; Download</strong> untuk memicu printer virtual. Animasi cetak thermal akan muncul, lalu file HD otomatis tersimpan ke perangkatmu.
               </span>
             </div>
           </div>
@@ -223,7 +236,7 @@ export default function ResultScreen({
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               onClick={onDownload}
-              className="flex-1 rounded-full bg-brand-primary hover:bg-brand-primary-hover py-4 text-base font-bold text-white shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:shadow-brand-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer font-heading uppercase tracking-wider"
+              className="btn-shine flex-1 rounded-full bg-brand-primary hover:bg-brand-primary-hover py-4 text-base font-bold text-white shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:shadow-brand-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer font-heading uppercase tracking-wider"
             >
               <Download size={18} />
               Cetak &amp; Download Struk
