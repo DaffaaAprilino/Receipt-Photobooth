@@ -434,17 +434,30 @@ export default function PhotoBooth() {
         ctx.font = `bold ${7 * scale}px "Courier New", monospace`;
         ctx.fillText("#THANK-YOU", receiptWidth / 2, barcodeStartY + barcodeHeightVal + (10 * scale));
 
-        let progress = 0;
+        // Sinkronkan progress dengan durasi animasi kertas (4 detik = receipt-emerge-stepped)
+        // Total durasi target: ~4.2 detik sebelum suara sobek kertas muncul
+        const ANIM_DURATION_MS = 4200;   // harus >= durasi animasi CSS (4s)
+        const TICK_MS          = 80;     // update setiap 80ms → halus tapi tidak berat
+        const totalTicks       = ANIM_DURATION_MS / TICK_MS; // ~52 tick
+        let tickCount          = 0;
+
         const printInterval = setInterval(() => {
-            progress += Math.random() * 25;
-            if (progress >= 100) {
-                progress = 100;
+            tickCount++;
+
+            // Kemajuan eased: lambat di awal, cepat di tengah, melambat lagi di akhir
+            // Menggunakan easing sinusoidal agar terasa natural seperti printer beneran
+            const rawRatio = tickCount / totalTicks;
+            const easedRatio = rawRatio < 0.5
+              ? 2 * rawRatio * rawRatio                          // ease-in
+              : -1 + (4 - 2 * rawRatio) * rawRatio;             // ease-out
+            const progress = Math.min(100, easedRatio * 100);
+
+            if (tickCount >= totalTicks) {
                 clearInterval(printInterval);
                 setPrintProgress(100);
-                
-                // Hentikan suara printer thermal!
+
+                // Suara selesai tepat saat animasi kertas habis
                 stopPrintSound();
-                // Mainkan suara sobek kertas!
                 playPaperTearSound();
 
                 setTimeout(() => {
@@ -455,11 +468,11 @@ export default function PhotoBooth() {
                     setTimeout(() => {
                         setCurrentStep('result');
                     }, 500);
-                }, 500);
+                }, 400);
             } else {
                 setPrintProgress(progress);
             }
-        }, 150);
+        }, TICK_MS);
     });
   };
 

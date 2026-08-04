@@ -77,6 +77,14 @@ export default function App() {
     600
   );
   const badgeRef = useRef<HTMLDivElement>(null);
+  const [emailCopied, setEmailCopied] = useState(false);
+
+  const copyEmail = () => {
+    navigator.clipboard.writeText('daffaaprilino7@gmail.com').then(() => {
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    });
+  };
 
   return (
     <div
@@ -134,10 +142,8 @@ export default function App() {
             </div>
             <div>
               <div className="text-sm font-heading font-bold text-brand-text leading-none">Receipt Photobooth</div>
-              <div className="text-[10px] text-brand-text/45 leading-none mt-0.5 tracking-wider uppercase" style={{ fontFamily: "'Courier New', monospace" }}>
-                v2.0 · thermal printer
-              </div>
             </div>
+
           </div>
 
           {/* Badges */}
@@ -184,12 +190,167 @@ export default function App() {
           <PhotoBooth />
         </main>
 
-        {/* ── FOOTER ── */}
-        <footer className="text-center text-[11px] text-brand-text/35 pb-2 animate-fade-up animate-delay-600">
-          <span style={{ fontFamily: "'Courier New', monospace" }}>
-            Made with ♥ · Receipt Photobooth v2.0
-          </span>
-        </footer>
+        {/* ── GET IN TOUCH SECTION ── */}
+        <section className="w-full animate-fade-up animate-delay-500">
+          <div className="mx-auto" style={{ maxWidth: 640 }}>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 border border-brand-accent/20 px-3 py-1 text-[11px] font-bold text-brand-accent uppercase tracking-wider mb-3">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Hubungi Kami
+              </div>
+              <h2 className="text-2xl font-heading font-bold text-brand-text">Hubungi Saya</h2>
+              <p className="mt-1 text-sm text-brand-text/50 max-w-sm mx-auto">
+                Ada pertanyaan, feedback, atau kolaborasi? Jangan ragu untuk menghubungi!
+              </p>
+            </div>
+
+            {/* 3-column card grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+              {/* Instagram */}
+              <a
+                href="https://www.instagram.com/daffaaprilino_/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex flex-col items-center text-center rounded-2xl border border-brand-secondary bg-white/80 backdrop-blur-sm px-5 py-6 shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
+              >
+                {/* Gradient bg on hover */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(245,133,41,0.06) 0%, rgba(221,42,123,0.06) 50%, rgba(129,52,175,0.06) 100%)' }}
+                />
+                {/* Icon */}
+                <div
+                  className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-3 shadow-md transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'linear-gradient(135deg, #F58529 0%, #DD2A7B 50%, #8134AF 100%)' }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                  </svg>
+                </div>
+                {/* Label */}
+                <span
+                  className="relative text-[10px] font-bold uppercase tracking-widest text-brand-text/35 mb-1"
+                  style={{ fontFamily: "'Courier New', monospace" }}
+                >Instagram</span>
+                {/* Value */}
+                <span className="relative text-sm font-bold text-brand-text group-hover:text-[#DD2A7B] transition-colors duration-300">
+                  @daffaaprilino_
+                </span>
+                {/* Hover arrow */}
+                <div className="relative mt-3 flex items-center gap-1 text-[10px] font-bold text-brand-text/25 group-hover:text-[#DD2A7B] transition-all duration-300 group-hover:gap-1.5">
+                  <span>Lihat Profil</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                  </svg>
+                </div>
+              </a>
+
+              {/* Email — copy to clipboard */}
+              <button
+                onClick={copyEmail}
+                className="group relative flex flex-col items-center text-center rounded-2xl border border-brand-secondary bg-white/80 backdrop-blur-sm px-5 py-6 shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl w-full cursor-pointer"
+              >
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(61,82,69,0.06) 0%, rgba(90,122,99,0.06) 100%)' }}
+                />
+                {/* Toast notif */}
+                <div
+                  className="absolute top-2.5 right-2.5 transition-all duration-300"
+                  style={{ opacity: emailCopied ? 1 : 0, transform: emailCopied ? 'translateY(0)' : 'translateY(-4px)' }}
+                >
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-accent text-white px-2 py-0.5 text-[9px] font-bold">
+                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                      <polyline points="1.5,5.5 4,8 8.5,2" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Tersalin!
+                  </span>
+                </div>
+                <div
+                  className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-3 shadow-md transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: emailCopied ? 'linear-gradient(135deg, #10B981, #34D399)' : 'linear-gradient(135deg, #3D5245 0%, #5A7A63 100%)', transition: 'background 0.4s' }}
+                >
+                  {emailCopied
+                    ? <svg width="20" height="20" viewBox="0 0 10 10" fill="none">
+                        <polyline points="1.5,5.5 4,8 8.5,2" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="20" height="16" x="2" y="4" rx="2"/>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                      </svg>
+                  }
+                </div>
+                <span
+                  className="relative text-[10px] font-bold uppercase tracking-widest text-brand-text/35 mb-1"
+                  style={{ fontFamily: "'Courier New', monospace" }}
+                >Email</span>
+                <span
+                  className="relative text-xs font-bold transition-colors duration-300 break-all leading-snug"
+                  style={{ color: emailCopied ? '#10B981' : 'var(--color-brand-text)' }}
+                >
+                  daffaaprilino7@gmail.com
+                </span>
+                <div
+                  className="relative mt-3 flex items-center gap-1 text-[10px] font-bold transition-all duration-300"
+                  style={{ color: emailCopied ? '#10B981' : 'rgba(46,42,39,0.25)' }}
+                >
+                  <span>{emailCopied ? 'Email disalin!' : 'Salin Email'}</span>
+                  {!emailCopied && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="14" height="14" x="8" y="8" rx="2"/>
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                    </svg>
+                  )}
+                </div>
+              </button>
+
+              {/* GitHub */}
+              <a
+                href="https://github.com/DaffaaAprilino"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex flex-col items-center text-center rounded-2xl border border-brand-secondary bg-white/80 backdrop-blur-sm px-5 py-6 shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
+              >
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(36,41,46,0.05) 0%, rgba(74,85,104,0.05) 100%)' }}
+                />
+                <div
+                  className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-3 shadow-md transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'linear-gradient(135deg, #24292e 0%, #4a5568 100%)' }}
+                >
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+                  </svg>
+                </div>
+                <span
+                  className="relative text-[10px] font-bold uppercase tracking-widest text-brand-text/35 mb-1"
+                  style={{ fontFamily: "'Courier New', monospace" }}
+                >GitHub</span>
+                <span className="relative text-sm font-bold text-brand-text group-hover:text-gray-700 transition-colors duration-300">
+                  DaffaaAprilino
+                </span>
+                <div className="relative mt-3 flex items-center gap-1 text-[10px] font-bold text-brand-text/25 group-hover:text-gray-600 transition-all duration-300 group-hover:gap-1.5">
+                  <span>Lihat Repo</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                  </svg>
+                </div>
+              </a>
+
+            </div>
+
+
+          </div>
+        </section>
+      
       </div>
     </div>
   );
